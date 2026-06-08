@@ -1,0 +1,68 @@
+{
+	"actions": [],
+	"creation": "2026-06-08 00:00:00.000000",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"field_name",
+		"field_label",
+		"field_type",
+		"value",
+		"value_date",
+		"value_check",
+		"attachment"
+	],
+	"fields": [
+		{
+			"fieldname": "field_name",
+			"fieldtype": "Data",
+			"label": "Field Name"
+		},
+		{
+			"fieldname": "field_label",
+			"fieldtype": "Data",
+			"label": "Field Label"
+		},
+		{
+			"fieldname": "field_type",
+			"fieldtype": "Data",
+			"label": "Field Type"
+		},
+		{
+			"fieldname": "value",
+			"fieldtype": "Small Text",
+			"label": "Value"
+		},
+		{
+			"fieldname": "value_date",
+			"fieldtype": "Date",
+			"label": "Value Date"
+		},
+		{
+			"default": "0",
+			"fieldname": "value_check",
+			"fieldtype": "Check",
+			"label": "Value Check"
+		},
+		{
+			"fieldname": "attachment",
+			"fieldtype": "Attach",
+			"label": "Attachment"
+		}
+	],
+	"grid_page_length": 50,
+	"index_web_pages_for_search": 0,
+	"istable": 1,
+	"links": [],
+	"modified": "2026-06-08 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Onerc Compliance",
+	"name": "Compliance Submission Value",
+	"owner": "Administrator",
+	"permissions": [],
+	"row_format": "Dynamic",
+	"sort_field": "creation",
+	"sort_order": "DESC",
+	"states": []
+}

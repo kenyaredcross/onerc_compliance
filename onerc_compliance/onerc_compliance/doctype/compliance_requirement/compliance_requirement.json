@@ -1,0 +1,162 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "COMPLIANCE-.YYYY.-.####",
+	"creation": "2026-06-08 20:17:42.905514",
+	"doctype": "DocType",
+	"engine": "InnoDB",
+	"field_order": [
+		"title",
+		"description",
+		"external_link",
+		"section_targeting",
+		"target_type",
+		"target_departments",
+		"section_schedule",
+		"deadline",
+		"requires_review",
+		"reminder_lead_days",
+		"reminder_repeat_days",
+		"expected_headcount",
+		"status",
+		"section_fields",
+		"fields"
+	],
+	"fields": [
+		{
+			"fieldname": "title",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Title",
+			"reqd": 1
+		},
+		{
+			"fieldname": "description",
+			"fieldtype": "Text Editor",
+			"label": "Description"
+		},
+		{
+			"fieldname": "external_link",
+			"fieldtype": "Data",
+			"label": "External Link"
+		},
+		{
+			"fieldname": "section_targeting",
+			"fieldtype": "Section Break",
+			"label": "Targeting"
+		},
+		{
+			"default": "All Staff",
+			"fieldname": "target_type",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"label": "Target Type",
+			"options": "All Staff\nBy Department",
+			"reqd": 1
+		},
+		{
+			"depends_on": "eval:doc.target_type==\"By Department\"",
+			"fieldname": "target_departments",
+			"fieldtype": "Table MultiSelect",
+			"label": "Target Departments",
+			"options": "Compliance Target Department"
+		},
+		{
+			"fieldname": "section_schedule",
+			"fieldtype": "Section Break",
+			"label": "Schedule"
+		},
+		{
+			"fieldname": "deadline",
+			"fieldtype": "Datetime",
+			"in_list_view": 1,
+			"label": "Deadline",
+			"reqd": 1
+		},
+		{
+			"default": "1",
+			"fieldname": "requires_review",
+			"fieldtype": "Check",
+			"label": "Requires Review"
+		},
+		{
+			"default": "7",
+			"fieldname": "reminder_lead_days",
+			"fieldtype": "Int",
+			"label": "Reminder Lead Days"
+		},
+		{
+			"default": "2",
+			"fieldname": "reminder_repeat_days",
+			"fieldtype": "Int",
+			"label": "Reminder Repeat Days"
+		},
+		{
+			"fieldname": "expected_headcount",
+			"fieldtype": "Int",
+			"label": "Expected Headcount"
+		},
+		{
+			"default": "Draft",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"label": "Status",
+			"options": "Draft\nActive\nClosed"
+		},
+		{
+			"fieldname": "section_fields",
+			"fieldtype": "Section Break",
+			"label": "Form Fields"
+		},
+		{
+			"fieldname": "fields",
+			"fieldtype": "Table",
+			"label": "Fields",
+			"options": "Compliance Requirement Field"
+		}
+	],
+	"grid_page_length": 50,
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2026-06-08 20:17:42.905514",
+	"modified_by": "Administrator",
+	"module": "Onerc Compliance",
+	"name": "Compliance Requirement",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Compliance Officer",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"read": 1,
+			"role": "Employee"
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "System Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"row_format": "Dynamic",
+	"rows_threshold_for_grid_search": 20,
+	"sort_field": "creation",
+	"sort_order": "DESC",
+	"states": []
+}
