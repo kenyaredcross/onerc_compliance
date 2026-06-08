@@ -5,6 +5,11 @@ app_description = "OneRC Compliance"
 app_email = "njengasheba@gmail.com"
 app_license = "mit"
 
+# SPA routing — redirect all /compliance/* sub-paths back to the index page
+website_route_rules = [
+	{"from_route": "/compliance/<path:app_path>", "to_route": "compliance"},
+]
+
 scheduler_events = {
 	"daily": [
 		"onerc_compliance.tasks.close_expired_requirements",

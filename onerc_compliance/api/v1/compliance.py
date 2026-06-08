@@ -159,6 +159,66 @@ def review_submission(submission, action, remarks=None):
 
 
 @frappe.whitelist()
+def get_submissions(requirement, status=None):
+	frappe.has_permission("Compliance Submission", ptype="read", throw=True)
+
+	filters = {"requirement": requirement}
+	if status:
+		filters["status"] = status
+
+	rows = frappe.get_all(
+		"Compliance Submission",
+		filters=filters,
+		fields=["name", "employee_name", "department", "status", "submitted_on"],
+		limit=500,
+	)
+
+	req_doc = frappe.get_doc("Compliance Requirement", requirement)
+	field_schema = []
+	for f in req_doc.fields:
+		field_schema.append({
+			"fieldname": f.fieldname,
+			"label": f.label or f.fieldname,
+			"fieldtype": f.fieldtype,
+		})
+
+	result = []
+	for row in rows:
+		sub_doc = frappe.get_doc("Compliance Submission", row.name)
+
+		answers = {}
+		for val in sub_doc.values:
+			answers[val.field_name] = {
+				"value": val.value,
+				"value_date": str(val.value_date) if val.value_date else None,
+				"value_check": bool(val.value_check),
+				"attachment": val.attachment,
+			}
+
+		review_actions = []
+		for act in sub_doc.review_actions:
+			review_actions.append({
+				"action": act.action,
+				"reviewer": act.reviewer,
+				"action_on": str(act.action_on) if act.action_on else None,
+				"remarks": act.remarks or "",
+			})
+
+		result.append({
+			"name": row.name,
+			"employee_name": sub_doc.employee_name or "",
+			"department": sub_doc.department or "",
+			"status": row.status,
+			"submitted_on": str(sub_doc.submitted_on) if sub_doc.submitted_on else None,
+			"field_schema": field_schema,
+			"answers": answers,
+			"review_actions": review_actions,
+		})
+
+	return _ok(result)
+
+
+@frappe.whitelist()
 def get_dashboard(requirement):
 	frappe.has_permission("Compliance Requirement", doc=requirement, ptype="read", throw=True)
 

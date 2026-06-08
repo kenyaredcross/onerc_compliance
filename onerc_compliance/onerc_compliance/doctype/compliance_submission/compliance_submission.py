@@ -92,7 +92,14 @@ class ComplianceSubmission(Document):
 				)
 
 	def _validate_submitted_values(self):
-		if self.status != "Submitted":
+		# Run on the submit action: employee moves status into Submitted or Reviewed
+		# from a prior Pending or Needs More Info state.  Reviewer-driven
+		# Submitted → Reviewed is intentionally excluded (_prev_status == "Submitted").
+		is_submit_action = (
+			self.status in ("Submitted", "Reviewed")
+			and self._prev_status in ("Pending", "Needs More Info")
+		)
+		if not is_submit_action:
 			return
 
 		req = frappe.get_doc("Compliance Requirement", self.requirement)
