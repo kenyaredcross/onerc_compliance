@@ -118,7 +118,7 @@ def submit_requirement(requirement, answers):
 			row["value"] = str(raw) if raw is not None else ""
 		sub.append("values", row)
 
-	sub.status = "Submitted"
+	sub.status = "Submitted" if req_doc.requires_review else "Reviewed"
 	sub.save(ignore_permissions=True)
 
 	return _ok({"submission": sub.name, "status": sub.status})

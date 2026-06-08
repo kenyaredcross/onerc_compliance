@@ -22,7 +22,7 @@ has_permission = {
 
 fixtures = [
 	{
-		"dt": "Role",
-		"filters": [["role_name", "in", ["Compliance Officer"]]],
+		"doctype": "Role",
+		"filters": {"name": "Compliance Officer"},
 	}
 ]

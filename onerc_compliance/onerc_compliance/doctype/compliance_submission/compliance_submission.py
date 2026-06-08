@@ -8,9 +8,9 @@ from frappe.utils import now_datetime
 
 
 ALLOWED_TRANSITIONS = {
-	"Pending": {"Submitted", "Exempted", "Overdue"},
+	"Pending": {"Submitted", "Reviewed", "Exempted", "Overdue"},
 	"Submitted": {"Reviewed", "Needs More Info", "Rejected"},
-	"Needs More Info": {"Submitted", "Overdue"},
+	"Needs More Info": {"Submitted", "Reviewed", "Overdue"},
 	"Rejected": {"Submitted"},
 	"Overdue": {"Submitted"},
 	"Reviewed": set(),
@@ -35,6 +35,10 @@ class ComplianceSubmission(Document):
 	def on_update(self):
 		notify_statuses = {"Reviewed", "Needs More Info", "Rejected"}
 		if self.status in notify_statuses and self._prev_status != self.status:
+			# Auto-complete (requires_review=False) sets Reviewed with no review_actions rows.
+			# There is no human reviewer, so nothing to notify the employee about.
+			if self.status == "Reviewed" and not self.review_actions:
+				return
 			self._email_employee()
 
 	# ------------------------------------------------------------------
