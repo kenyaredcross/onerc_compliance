@@ -173,9 +173,15 @@ class ComplianceSubmission(Document):
 		if latest_remark:
 			message_parts.append(_("Reviewer note: {0}").format(latest_remark))
 
-		frappe.sendmail(
-			recipients=[email],
-			subject=subject,
-			message="<br>".join(message_parts),
-			now=True,
-		)
+		try:
+			frappe.sendmail(
+				recipients=[email],
+				subject=subject,
+				message="<br>".join(message_parts),
+				now=False,
+			)
+		except frappe.OutgoingEmailError:
+			frappe.log_error(
+				title="Compliance Submission email not sent",
+				message=f"No outgoing email account configured. Skipping notification for {self.name}.",
+			)

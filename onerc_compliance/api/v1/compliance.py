@@ -160,7 +160,8 @@ def review_submission(submission, action, remarks=None):
 
 @frappe.whitelist()
 def get_submissions(requirement, status=None):
-	frappe.has_permission("Compliance Submission", ptype="read", throw=True)
+	# Requires write on Compliance Submission — employees are read-only and must be denied.
+	frappe.has_permission("Compliance Submission", ptype="write", throw=True)
 
 	filters = {"requirement": requirement}
 	if status:
@@ -220,7 +221,8 @@ def get_submissions(requirement, status=None):
 
 @frappe.whitelist()
 def get_dashboard(requirement):
-	frappe.has_permission("Compliance Requirement", doc=requirement, ptype="read", throw=True)
+	# Requires write on Compliance Submission — same gate as get_submissions and review_submission.
+	frappe.has_permission("Compliance Submission", ptype="write", throw=True)
 
 	req_doc = frappe.get_doc("Compliance Requirement", requirement)
 

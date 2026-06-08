@@ -7,6 +7,8 @@ from frappe.tests import IntegrationTestCase
 EXTRA_TEST_RECORD_DEPENDENCIES = []
 IGNORE_TEST_RECORD_DEPENDENCIES = ["Employee", "Fiscal Year", "Company", "Department", "Designation", "User"]
 
+_STAFF_USER_EMAIL = "_test-compliance-employee@example.com"
+
 
 class IntegrationTestComplianceSubmission(IntegrationTestCase):
 	def setUp(self):
@@ -23,6 +25,7 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		frappe.db.delete("Compliance Requirement", {"title": ["like", "_test-sub-%"]})
 
 	def tearDown(self):
+		frappe.set_user("Administrator")  # always restore before cleanup
 		subs = frappe.get_all(
 			"Compliance Submission",
 			filters={"employee": ["like", "_test-emp-%"]},
@@ -32,6 +35,23 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 			frappe.delete_doc("Compliance Submission", s.name, force=True, ignore_permissions=True)
 		frappe.db.delete("Compliance Requirement", {"title": ["like", "_test-sub-%"]})
 		frappe.db.delete("Employee", {"first_name": ["like", "_test-emp-%"]})
+		if frappe.db.exists("User", _STAFF_USER_EMAIL):
+			frappe.delete_doc("User", _STAFF_USER_EMAIL, force=True, ignore_permissions=True)
+
+	def _make_staff_user(self):
+		"""Create (or reuse) a user that has the Employee role only — no Compliance Officer."""
+		if not frappe.db.exists("User", _STAFF_USER_EMAIL):
+			user = frappe.get_doc({
+				"doctype": "User",
+				"email": _STAFF_USER_EMAIL,
+				"first_name": "_Test",
+				"last_name": "Employee",
+				"enabled": 1,
+				"user_type": "System User",
+				"roles": [{"role": "Employee"}],
+			})
+			user.insert(ignore_permissions=True)
+		return _STAFF_USER_EMAIL
 
 	def _make_requirement(self, title="_test-sub-req", fields=None, requires_review=1):
 		doc = frappe.get_doc({
@@ -165,3 +185,46 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 			frappe.db.get_value("Compliance Submission", sub.name, "status"),
 			"Pending",
 		)
+
+	# ---- Permission tests ----
+
+	def test_get_submissions_denies_employee(self):
+		"""A user with only the Employee role must be denied by get_submissions."""
+		req = self._make_requirement(title="_test-sub-req-deny")
+		self._make_staff_user()
+
+		from onerc_compliance.api.v1.compliance import get_submissions
+
+		try:
+			frappe.set_user(_STAFF_USER_EMAIL)
+			with self.assertRaises(frappe.PermissionError):
+				get_submissions(requirement=req.name)
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_get_dashboard_denies_employee(self):
+		"""A user with only the Employee role must be denied by get_dashboard."""
+		req = self._make_requirement(title="_test-sub-req-deny-dash")
+		self._make_staff_user()
+
+		from onerc_compliance.api.v1.compliance import get_dashboard
+
+		try:
+			frappe.set_user(_STAFF_USER_EMAIL)
+			with self.assertRaises(frappe.PermissionError):
+				get_dashboard(requirement=req.name)
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_get_submissions_permits_officer(self):
+		"""Administrator (System Manager) must be able to call get_submissions."""
+		req = self._make_requirement(title="_test-sub-req-permit")
+		emp = self._make_employee(suffix="permit")
+		self._make_submission(req.name, emp)
+
+		# We're already running as Administrator in the test suite.
+		from onerc_compliance.api.v1.compliance import get_submissions
+
+		result = get_submissions(requirement=req.name)
+		self.assertEqual(result["status"], "success")
+		self.assertIsInstance(result["data"], list)
