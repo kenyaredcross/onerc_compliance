@@ -32,15 +32,6 @@ class ComplianceSubmission(Document):
 		self._validate_review_remarks()
 		self._validate_submitted_values()
 
-	def on_update(self):
-		notify_statuses = {"Reviewed", "Needs More Info", "Rejected"}
-		if self.status in notify_statuses and self._prev_status != self.status:
-			# Auto-complete (requires_review=False) sets Reviewed with no review_actions rows.
-			# There is no human reviewer, so nothing to notify the employee about.
-			if self.status == "Reviewed" and not self.review_actions:
-				return
-			self._email_employee()
-
 	# ------------------------------------------------------------------
 	# Helpers
 	# ------------------------------------------------------------------
@@ -144,44 +135,3 @@ class ComplianceSubmission(Document):
 		if not self.submitted_on:
 			self.submitted_on = now_datetime()
 
-	def _email_employee(self):
-		emp = frappe.db.get_value(
-			"Employee",
-			self.employee,
-			["company_email", "user_id"],
-			as_dict=True,
-		)
-		if not emp:
-			return
-
-		email = emp.company_email or emp.user_id
-		if not email:
-			return
-
-		latest_remark = ""
-		for row in reversed(self.review_actions):
-			if row.remarks:
-				latest_remark = row.remarks
-				break
-
-		subject = _("Compliance submission status updated: {0}").format(self.status)
-		message_parts = [
-			_("Your compliance submission {0} has been updated to: {1}.").format(
-				self.name, self.status
-			)
-		]
-		if latest_remark:
-			message_parts.append(_("Reviewer note: {0}").format(latest_remark))
-
-		try:
-			frappe.sendmail(
-				recipients=[email],
-				subject=subject,
-				message="<br>".join(message_parts),
-				now=False,
-			)
-		except frappe.OutgoingEmailError:
-			frappe.log_error(
-				title="Compliance Submission email not sent",
-				message=f"No outgoing email account configured. Skipping notification for {self.name}.",
-			)
