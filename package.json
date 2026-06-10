@@ -1,0 +1,9 @@
+{
+  "name": "onerc_compliance",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd frontend && yarn build",
+    "dev": "cd frontend && yarn dev"
+  }
+}

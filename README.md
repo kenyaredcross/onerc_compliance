@@ -56,6 +56,39 @@ All endpoints live at `onerc_compliance.api.v1.compliance` and return `{"status"
 | `get_submissions(requirement, status?)` | Compliance Officer / System Manager | Returns all submissions for a requirement, including answers and review history |
 | `get_dashboard(requirement)` | Compliance Officer / System Manager | Aggregate stats — completion %, status counts, per-department breakdown |
 
+## Demo Data
+
+A self-contained demo dataset lets you explore both portals without manual data entry.
+
+```bash
+# Load (idempotent — safe to run multiple times)
+bench --site <site> execute onerc_compliance.demo_data.load
+
+# Remove everything the loader created
+bench --site <site> execute onerc_compliance.demo_data.teardown
+```
+
+**Demo logins** (password for all: `Demo@1234`)
+
+| Email | Role | Portal |
+|---|---|---|
+| `demo.alice@demo.local` | Employee — Operations | `/compliance` |
+| `demo.bob@demo.local` | Employee — Operations | `/compliance` |
+| `demo.carol@demo.local` | Employee — Human Resources | `/compliance` |
+| `demo.dave@demo.local` | Employee — Human Resources | `/compliance` |
+| `demo.officer@demo.local` | Compliance Officer | `/compliance/dashboard` |
+
+**What gets created:**
+
+* Two requirements with 90-day future deadlines and status Active (so submissions auto-generate for all in-scope employees):
+  * *DEMO: Annual Policy Acknowledgement* — All Staff, `requires_review=1`, five field types: Check, Date, Select, Data, Attach
+  * *DEMO: Operations Safety Compliance* — By Department (Operations), two fields: Check, Data
+* Submission states spread across both requirements so the dashboard shows real data:
+  * Alice → Submitted, Bob → Reviewed, Carol → Needs More Info (with reviewer note), Dave → Pending (Req 1)
+  * Alice → Submitted, Bob → Pending (Req 2)
+
+All records are namespaced (`@demo.local`, `DEMO: ` prefix) so `teardown()` is reliable and cannot accidentally remove real data.
+
 ## Running Tests
 
 ```bash

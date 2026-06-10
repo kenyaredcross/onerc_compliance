@@ -12,26 +12,48 @@ _STAFF_USER_EMAIL = "_test-compliance-employee@example.com"
 
 class IntegrationTestComplianceSubmission(IntegrationTestCase):
 	def setUp(self):
-		# Clean up in correct order: submissions first, then requirements, then employees
-		frappe.db.delete("Compliance Submission Value", {})
-		frappe.db.delete("Compliance Review Action", {})
-		subs = frappe.get_all(
+		# Delete ALL submissions for test requirements — catches auto-generated ones for any
+		# active employee (including demo employees) that _generate_submissions() created.
+		test_req_names = frappe.get_all(
+			"Compliance Requirement",
+			filters={"title": ["like", "_test-sub-%"]},
+			pluck="name",
+		)
+		for req_name in test_req_names:
+			for sub_name in frappe.get_all(
+				"Compliance Submission",
+				filters={"requirement": req_name},
+				pluck="name",
+			):
+				frappe.delete_doc("Compliance Submission", sub_name, force=True, ignore_permissions=True)
+		# Belt-and-suspenders: clear any remaining test-employee submissions
+		for s in frappe.get_all(
 			"Compliance Submission",
 			filters={"employee": ["like", "_test-emp-%"]},
 			fields=["name"],
-		)
-		for s in subs:
+		):
 			frappe.delete_doc("Compliance Submission", s.name, force=True, ignore_permissions=True)
 		frappe.db.delete("Compliance Requirement", {"title": ["like", "_test-sub-%"]})
 
 	def tearDown(self):
 		frappe.set_user("Administrator")  # always restore before cleanup
-		subs = frappe.get_all(
+		test_req_names = frappe.get_all(
+			"Compliance Requirement",
+			filters={"title": ["like", "_test-sub-%"]},
+			pluck="name",
+		)
+		for req_name in test_req_names:
+			for sub_name in frappe.get_all(
+				"Compliance Submission",
+				filters={"requirement": req_name},
+				pluck="name",
+			):
+				frappe.delete_doc("Compliance Submission", sub_name, force=True, ignore_permissions=True)
+		for s in frappe.get_all(
 			"Compliance Submission",
 			filters={"employee": ["like", "_test-emp-%"]},
 			fields=["name"],
-		)
-		for s in subs:
+		):
 			frappe.delete_doc("Compliance Submission", s.name, force=True, ignore_permissions=True)
 		frappe.db.delete("Compliance Requirement", {"title": ["like", "_test-sub-%"]})
 		frappe.db.delete("Employee", {"first_name": ["like", "_test-emp-%"]})
@@ -133,29 +155,40 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 
 		self.assertEqual(result["status"], "success")
 		subs = result["data"]
-		self.assertEqual(len(subs), 1)
-		self.assertEqual(subs[0]["name"], sub.name)
-		self.assertEqual(subs[0]["status"], "Pending")
-		self.assertIn("field_schema", subs[0])
-		self.assertEqual(len(subs[0]["field_schema"]), 1)
-		self.assertEqual(subs[0]["field_schema"][0]["label"], "Full Name")
-		self.assertIn("answers", subs[0])
-		self.assertIn("review_actions", subs[0])
+		# Other active employees (e.g. demo data) may also have auto-generated submissions;
+		# locate the test employee's submission by name instead of asserting total count.
+		our_sub = next((s for s in subs if s["name"] == sub.name), None)
+		self.assertIsNotNone(our_sub, "Test employee submission not found in get_submissions result")
+		self.assertEqual(our_sub["status"], "Pending")
+		self.assertIn("field_schema", our_sub)
+		self.assertEqual(len(our_sub["field_schema"]), 1)
+		self.assertEqual(our_sub["field_schema"][0]["label"], "Full Name")
+		self.assertIn("answers", our_sub)
+		self.assertIn("review_actions", our_sub)
 
 	def test_get_submissions_status_filter(self):
 		req = self._make_requirement(title="_test-sub-req-filter")
 		emp_a = self._make_employee(suffix="filter-a")
 		emp_b = self._make_employee(suffix="filter-b")
 		self._make_submission(req.name, emp_a, status="Pending")
-		self._make_submission(req.name, emp_b, status="Overdue")
+		sub_b = self._make_submission(req.name, emp_b, status="Overdue")
 
 		from onerc_compliance.api.v1.compliance import get_submissions
 		all_result = get_submissions(requirement=req.name)
-		self.assertEqual(len(all_result["data"]), 2)
+		# Other active employees may have auto-generated Pending submissions; count >= 2.
+		self.assertGreaterEqual(len(all_result["data"]), 2)
 
+		# Verify status filter returns only the requested status.
 		pending_result = get_submissions(requirement=req.name, status="Pending")
-		self.assertEqual(len(pending_result["data"]), 1)
-		self.assertEqual(pending_result["data"][0]["status"], "Pending")
+		self.assertTrue(
+			all(s["status"] == "Pending" for s in pending_result["data"]),
+			"Pending filter returned non-Pending submissions",
+		)
+
+		# Only emp_b was explicitly set to Overdue, so Overdue filter returns exactly 1.
+		overdue_result = get_submissions(requirement=req.name, status="Overdue")
+		self.assertEqual(len(overdue_result["data"]), 1)
+		self.assertEqual(overdue_result["data"][0]["name"], sub_b.name)
 
 	def test_no_review_blank_mandatory_raises(self):
 		# requires_review=0: submit_requirement sets status straight to Reviewed.

@@ -240,7 +240,12 @@ async function loadRequirements() {
   loadError.value = ''
   try {
     const result = await call('onerc_compliance.api.v1.compliance.get_my_requirements')
-    requirements.value = result?.data || []
+    if (result?.status === 'error') {
+      loadError.value = result.message || 'Failed to load requirements.'
+      requirements.value = []
+      return
+    }
+    requirements.value = Array.isArray(result?.data) ? result.data : []
     for (const req of requirements.value) {
       initFormValues(req)
     }

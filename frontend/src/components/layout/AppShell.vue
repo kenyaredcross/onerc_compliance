@@ -83,6 +83,19 @@
             </svg>
           </a>
         </div>
+        <a
+          v-if="auth.isOfficer"
+          v-show="!collapsed || isMobile"
+          href="/app/compliance"
+          class="mt-2 flex items-center gap-2 px-2 py-1.5 rounded text-slate-400 hover:text-white hover:bg-white/10 text-xs font-medium transition-colors"
+          title="Open Compliance workspace in desk"
+        >
+          <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 01-2-2h-2a2 2 0 00-2 2"/>
+          </svg>
+          Open Desk
+        </a>
       </div>
     </aside>
 

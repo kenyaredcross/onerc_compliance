@@ -15,14 +15,18 @@ def _ok(data, message="", meta=None):
 
 
 def _err(message, data=None):
-	return {"status": "error", "data": data or {}, "message": message, "meta": {}}
+	return {"status": "error", "data": data if data is not None else [], "message": message, "meta": {}}
 
 
 @frappe.whitelist()
 def get_my_requirements():
 	employee_name = get_employee_for_user()
 	if not employee_name:
-		return _err(_("No employee record linked to your account."))
+		return _err(_(
+			"Your account isn't linked to an employee record. "
+			"Compliance requirements are assigned to staff records — "
+			"if you're a member of staff, contact HR or your Compliance Officer."
+		))
 
 	requirements = frappe.get_all(
 		"Compliance Requirement",
@@ -63,6 +67,15 @@ def get_my_requirements():
 				"attachment": val.attachment,
 			}
 
+		review_actions = []
+		for act in sub_doc.review_actions:
+			review_actions.append({
+				"action": act.action,
+				"reviewer": act.reviewer,
+				"action_on": str(act.action_on) if act.action_on else None,
+				"remarks": act.remarks or "",
+			})
+
 		result.append({
 			"requirement": req.name,
 			"title": req.title,
@@ -72,6 +85,7 @@ def get_my_requirements():
 			"field_schema": field_schema,
 			"submission_status": sub_doc.status,
 			"answers": answers,
+			"review_actions": review_actions,
 		})
 
 	return _ok(result)
@@ -88,7 +102,11 @@ def submit_requirement(requirement, answers):
 
 	employee_name = get_employee_for_user()
 	if not employee_name:
-		return _err(_("No employee record linked to your account."))
+		return _err(_(
+			"Your account isn't linked to an employee record. "
+			"Compliance requirements are assigned to staff records — "
+			"if you're a member of staff, contact HR or your Compliance Officer."
+		))
 
 	submission_name = ensure_submission(requirement, employee_name)
 	sub = frappe.get_doc("Compliance Submission", submission_name)
