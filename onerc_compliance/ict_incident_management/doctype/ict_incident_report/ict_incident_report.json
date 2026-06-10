@@ -1,0 +1,271 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "ICT-.YYYY.-.#####",
+	"creation": "2026-06-10 00:00:00.000000",
+	"doctype": "DocType",
+	"engine": "InnoDB",
+	"field_order": [
+		"section_incident_details",
+		"incident_id",
+		"title",
+		"affected_service",
+		"description",
+		"column_break_details",
+		"category",
+		"priority",
+		"date_reported",
+		"show_on_dashboard",
+		"current_status_message",
+		"section_reporter",
+		"logged_by",
+		"logging_department",
+		"section_affected_users",
+		"affected_users",
+		"affected_department",
+		"affected_individual",
+		"section_assignment",
+		"assigned_department",
+		"assigned_to",
+		"hod_notified",
+		"section_status",
+		"status",
+		"overall_progress",
+		"column_break_status",
+		"expected_resolution_date",
+		"actual_resolution_date",
+		"section_resolution",
+		"resolution_notes",
+		"resolved_by",
+		"resolution_datetime",
+		"stakeholders_notified",
+		"section_progress_updates",
+		"progress_updates"
+	],
+	"fields": [
+		{
+			"fieldname": "section_incident_details",
+			"fieldtype": "Section Break",
+			"label": "Incident Details"
+		},
+		{
+			"fieldname": "incident_id",
+			"fieldtype": "Data",
+			"label": "Incident ID",
+			"read_only": 1
+		},
+		{
+			"fieldname": "title",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Title",
+			"reqd": 1
+		},
+		{
+			"fieldname": "affected_service",
+			"fieldtype": "Data",
+			"label": "Affected Service"
+		},
+		{
+			"fieldname": "description",
+			"fieldtype": "Long Text",
+			"label": "Description",
+			"reqd": 1
+		},
+		{
+			"fieldname": "column_break_details",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "category",
+			"fieldtype": "Select",
+			"label": "Category",
+			"options": "Network\nSoftware\nHardware\nSecurity\nOther"
+		},
+		{
+			"fieldname": "priority",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"label": "Priority",
+			"options": "Low\nMedium\nHigh\nCritical"
+		},
+		{
+			"fieldname": "date_reported",
+			"fieldtype": "Datetime",
+			"label": "Date & Time Reported",
+			"read_only": 1
+		},
+		{
+			"default": "0",
+			"fieldname": "show_on_dashboard",
+			"fieldtype": "Check",
+			"label": "Show on Staff Dashboard"
+		},
+		{
+			"fieldname": "current_status_message",
+			"fieldtype": "Data",
+			"label": "Current Status Message"
+		},
+		{
+			"fieldname": "section_reporter",
+			"fieldtype": "Section Break",
+			"label": "Reporter / Logged By"
+		},
+		{
+			"fieldname": "logged_by",
+			"fieldtype": "Link",
+			"label": "Logged By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "logging_department",
+			"fieldtype": "Data",
+			"label": "Logging Department"
+		},
+		{
+			"fieldname": "section_affected_users",
+			"fieldtype": "Section Break",
+			"label": "Affected Users"
+		},
+		{
+			"fieldname": "affected_users",
+			"fieldtype": "Select",
+			"label": "Affected Users",
+			"options": "All Staff\nSpecific Department\nIndividual"
+		},
+		{
+			"depends_on": "eval:doc.affected_users=='Specific Department'",
+			"fieldname": "affected_department",
+			"fieldtype": "Data",
+			"label": "Affected Department"
+		},
+		{
+			"depends_on": "eval:doc.affected_users=='Individual'",
+			"fieldname": "affected_individual",
+			"fieldtype": "Link",
+			"label": "Affected Individual",
+			"options": "User"
+		},
+		{
+			"fieldname": "section_assignment",
+			"fieldtype": "Section Break",
+			"label": "Assignment"
+		},
+		{
+			"fieldname": "assigned_department",
+			"fieldtype": "Select",
+			"label": "Assigned Department",
+			"options": "\nNetwork & Infrastructure\nSoftware & Applications\nHardware & Devices\nSecurity & Access\nHelpdesk"
+		},
+		{
+			"fieldname": "assigned_to",
+			"fieldtype": "Link",
+			"label": "Assigned To",
+			"options": "User"
+		},
+		{
+			"default": "0",
+			"fieldname": "hod_notified",
+			"fieldtype": "Check",
+			"label": "HOD Notified"
+		},
+		{
+			"fieldname": "section_status",
+			"fieldtype": "Section Break",
+			"label": "Status & Progress"
+		},
+		{
+			"default": "Open",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"label": "Status",
+			"options": "Open\nIn Progress\nPending\nResolved\nClosed"
+		},
+		{
+			"fieldname": "overall_progress",
+			"fieldtype": "Percent",
+			"label": "Overall Progress"
+		},
+		{
+			"fieldname": "column_break_status",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "expected_resolution_date",
+			"fieldtype": "Date",
+			"label": "Expected Resolution Date"
+		},
+		{
+			"fieldname": "actual_resolution_date",
+			"fieldtype": "Date",
+			"label": "Actual Resolution Date"
+		},
+		{
+			"fieldname": "section_resolution",
+			"fieldtype": "Section Break",
+			"label": "Resolution"
+		},
+		{
+			"fieldname": "resolution_notes",
+			"fieldtype": "Long Text",
+			"label": "Resolution Notes"
+		},
+		{
+			"fieldname": "resolved_by",
+			"fieldtype": "Link",
+			"label": "Resolved By",
+			"options": "User"
+		},
+		{
+			"fieldname": "resolution_datetime",
+			"fieldtype": "Datetime",
+			"label": "Resolution Date & Time"
+		},
+		{
+			"default": "0",
+			"fieldname": "stakeholders_notified",
+			"fieldtype": "Check",
+			"label": "Stakeholders Notified"
+		},
+		{
+			"fieldname": "section_progress_updates",
+			"fieldtype": "Section Break",
+			"label": "Progress Updates"
+		},
+		{
+			"fieldname": "progress_updates",
+			"fieldtype": "Table",
+			"label": "Progress Updates",
+			"options": "ICT Incident Progress Update"
+		}
+	],
+	"grid_page_length": 50,
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2026-06-10 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "ICT Incident Management",
+	"name": "ICT Incident Report",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "System Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"row_format": "Dynamic",
+	"sort_field": "creation",
+	"sort_order": "DESC",
+	"states": [],
+	"title_field": "title"
+}
