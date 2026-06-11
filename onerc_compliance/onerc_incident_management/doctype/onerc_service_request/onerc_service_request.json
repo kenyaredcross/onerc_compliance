@@ -1,0 +1,337 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "SR-.YYYY.-.#####",
+ "creation": "2026-06-11 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_request",
+  "catalogue_item",
+  "requested_by",
+  "requested_for",
+  "date_requested",
+  "column_break_request",
+  "branch_region",
+  "support_team",
+  "section_details",
+  "subject",
+  "description",
+  "section_classification",
+  "affected_service",
+  "data_classification",
+  "column_break_classification",
+  "impact",
+  "urgency",
+  "priority",
+  "section_sla",
+  "sla_policy",
+  "first_response_due",
+  "resolution_due",
+  "first_responded_on",
+  "resolved_on",
+  "column_break_sla",
+  "on_hold_since",
+  "total_hold_minutes",
+  "response_breached",
+  "resolution_breached",
+  "sla_status",
+  "section_approvals",
+  "requires_ict_approval",
+  "access_provisioning_pending",
+  "approvals",
+  "section_status",
+  "status",
+  "section_fulfilment",
+  "fulfilled_on",
+  "fulfilled_by",
+  "fulfilment_notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_request",
+   "fieldtype": "Section Break",
+   "label": "Request"
+  },
+  {
+   "fieldname": "catalogue_item",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Catalogue Item",
+   "options": "Onerc Request Catalogue Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Requested By",
+   "options": "User"
+  },
+  {
+   "fieldname": "requested_for",
+   "fieldtype": "Link",
+   "label": "Requested For",
+   "options": "User"
+  },
+  {
+   "fieldname": "date_requested",
+   "fieldtype": "Datetime",
+   "label": "Date Requested",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_request",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "branch_region",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Branch / Region",
+   "options": "Geo Node"
+  },
+  {
+   "fieldname": "support_team",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Support Team",
+   "options": "Onerc Support Team"
+  },
+  {
+   "fieldname": "section_details",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Subject",
+   "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Long Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "section_classification",
+   "fieldtype": "Section Break",
+   "label": "Classification & Priority"
+  },
+  {
+   "fieldname": "affected_service",
+   "fieldtype": "Link",
+   "label": "Affected Service",
+   "options": "Onerc Service"
+  },
+  {
+   "description": "Sensitive. Visible only to users granted permission level 1.",
+   "fieldname": "data_classification",
+   "fieldtype": "Link",
+   "label": "Data Classification",
+   "options": "Onerc Data Classification",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_classification",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "impact",
+   "fieldtype": "Link",
+   "label": "Impact",
+   "options": "Onerc Impact"
+  },
+  {
+   "fieldname": "urgency",
+   "fieldtype": "Link",
+   "label": "Urgency",
+   "options": "Onerc Urgency"
+  },
+  {
+   "description": "Derived from Impact × Urgency via the Priority Matrix — never typed.",
+   "fieldname": "priority",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Priority",
+   "options": "Onerc Priority",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_sla",
+   "fieldtype": "Section Break",
+   "label": "SLA"
+  },
+  {
+   "fieldname": "sla_policy",
+   "fieldtype": "Link",
+   "label": "SLA Policy",
+   "options": "Onerc SLA Policy",
+   "read_only": 1
+  },
+  {
+   "fieldname": "first_response_due",
+   "fieldtype": "Datetime",
+   "label": "First Response Due",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolution_due",
+   "fieldtype": "Datetime",
+   "label": "Fulfilment Due",
+   "read_only": 1
+  },
+  {
+   "fieldname": "first_responded_on",
+   "fieldtype": "Datetime",
+   "label": "First Responded On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolved_on",
+   "fieldtype": "Datetime",
+   "label": "Fulfilled On (SLA)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_sla",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "on_hold_since",
+   "fieldtype": "Datetime",
+   "label": "On Hold Since",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_hold_minutes",
+   "fieldtype": "Float",
+   "label": "Total Hold (working minutes)",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "response_breached",
+   "fieldtype": "Check",
+   "label": "Response Breached",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "resolution_breached",
+   "fieldtype": "Check",
+   "label": "Fulfilment Breached",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sla_status",
+   "fieldtype": "Select",
+   "label": "SLA Status",
+   "options": "Ongoing\nPaused\nFulfilled\nBreached",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_approvals",
+   "fieldtype": "Section Break",
+   "label": "Approvals"
+  },
+  {
+   "default": "0",
+   "description": "Fetched from the catalogue item (AUP 10.3).",
+   "fieldname": "requires_ict_approval",
+   "fieldtype": "Check",
+   "label": "Requires ICT Approval",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Set when an approved request needs an access grant provisioned (Access Grant registry deferred).",
+   "fieldname": "access_provisioning_pending",
+   "fieldtype": "Check",
+   "label": "Access Provisioning Pending",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approvals",
+   "fieldtype": "Table",
+   "label": "Approvals",
+   "options": "Onerc Service Request Approval"
+  },
+  {
+   "fieldname": "section_status",
+   "fieldtype": "Section Break",
+   "label": "Status"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nPending HOD\nPending ICT\nApproved\nIn Fulfilment\nFulfilled\nClosed\nRejected\nCancelled"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_fulfilment",
+   "fieldtype": "Section Break",
+   "label": "Fulfilment"
+  },
+  {
+   "fieldname": "fulfilled_on",
+   "fieldtype": "Datetime",
+   "label": "Fulfilled On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fulfilled_by",
+   "fieldtype": "Link",
+   "label": "Fulfilled By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fulfilment_notes",
+   "fieldtype": "Long Text",
+   "label": "Fulfilment Notes"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-11 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Onerc Incident Management",
+ "name": "Onerc Service Request",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "subject",
+ "track_changes": 1
+}

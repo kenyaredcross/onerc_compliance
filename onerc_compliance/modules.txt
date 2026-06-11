@@ -1,2 +1,2 @@
 Onerc Compliance
-ICT Incident Management
+Onerc Incident Management

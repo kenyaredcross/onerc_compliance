@@ -1,0 +1,145 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:calendar_name",
+ "creation": "2026-06-11 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "calendar_name",
+  "time_zone",
+  "section_working_days",
+  "work_monday",
+  "work_tuesday",
+  "work_wednesday",
+  "work_thursday",
+  "column_break_days",
+  "work_friday",
+  "work_saturday",
+  "work_sunday",
+  "section_hours",
+  "business_start_time",
+  "business_end_time",
+  "section_holidays",
+  "holidays"
+ ],
+ "fields": [
+  {
+   "fieldname": "calendar_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Calendar Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "time_zone",
+   "fieldtype": "Data",
+   "label": "Time Zone"
+  },
+  {
+   "fieldname": "section_working_days",
+   "fieldtype": "Section Break",
+   "label": "Working Days"
+  },
+  {
+   "default": "1",
+   "fieldname": "work_monday",
+   "fieldtype": "Check",
+   "label": "Monday"
+  },
+  {
+   "default": "1",
+   "fieldname": "work_tuesday",
+   "fieldtype": "Check",
+   "label": "Tuesday"
+  },
+  {
+   "default": "1",
+   "fieldname": "work_wednesday",
+   "fieldtype": "Check",
+   "label": "Wednesday"
+  },
+  {
+   "default": "1",
+   "fieldname": "work_thursday",
+   "fieldtype": "Check",
+   "label": "Thursday"
+  },
+  {
+   "fieldname": "column_break_days",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "work_friday",
+   "fieldtype": "Check",
+   "label": "Friday"
+  },
+  {
+   "default": "0",
+   "fieldname": "work_saturday",
+   "fieldtype": "Check",
+   "label": "Saturday"
+  },
+  {
+   "default": "0",
+   "fieldname": "work_sunday",
+   "fieldtype": "Check",
+   "label": "Sunday"
+  },
+  {
+   "fieldname": "section_hours",
+   "fieldtype": "Section Break",
+   "label": "Business Hours"
+  },
+  {
+   "fieldname": "business_start_time",
+   "fieldtype": "Time",
+   "label": "Business Start Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "business_end_time",
+   "fieldtype": "Time",
+   "label": "Business End Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_holidays",
+   "fieldtype": "Section Break",
+   "label": "Holidays"
+  },
+  {
+   "fieldname": "holidays",
+   "fieldtype": "Table",
+   "label": "Holidays",
+   "options": "Onerc Business Calendar Holiday"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-11 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Onerc Incident Management",
+ "naming_rule": "By fieldname",
+ "name": "Onerc Business Calendar",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

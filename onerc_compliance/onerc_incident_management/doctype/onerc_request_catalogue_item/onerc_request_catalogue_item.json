@@ -1,0 +1,127 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:item_name",
+ "creation": "2026-06-11 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_name",
+  "service",
+  "service_category",
+  "is_active",
+  "column_break_main",
+  "default_impact",
+  "default_urgency",
+  "default_support_team",
+  "section_governance",
+  "requires_ict_approval",
+  "spawns_access_request",
+  "section_description",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Catalogue Item",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "service",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Service",
+   "options": "Onerc Service"
+  },
+  {
+   "fieldname": "service_category",
+   "fieldtype": "Link",
+   "label": "Service Category",
+   "options": "Onerc Service Category"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_impact",
+   "fieldtype": "Link",
+   "label": "Default Impact",
+   "options": "Onerc Impact"
+  },
+  {
+   "fieldname": "default_urgency",
+   "fieldtype": "Link",
+   "label": "Default Urgency",
+   "options": "Onerc Urgency"
+  },
+  {
+   "fieldname": "default_support_team",
+   "fieldtype": "Link",
+   "label": "Default Support Team",
+   "options": "Onerc Support Team"
+  },
+  {
+   "fieldname": "section_governance",
+   "fieldtype": "Section Break",
+   "label": "Governance"
+  },
+  {
+   "default": "0",
+   "description": "Requires the ICT approval step before the request can be Approved (AUP 10.3).",
+   "fieldname": "requires_ict_approval",
+   "fieldtype": "Check",
+   "label": "Requires ICT Approval"
+  },
+  {
+   "default": "0",
+   "description": "On approval, flag that an access grant must be provisioned for the requester.",
+   "fieldname": "spawns_access_request",
+   "fieldtype": "Check",
+   "label": "Spawns Access Request"
+  },
+  {
+   "fieldname": "section_description",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-11 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Onerc Incident Management",
+ "naming_rule": "By fieldname",
+ "name": "Onerc Request Catalogue Item",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,267 @@
+{
+ "app": "onerc_compliance",
+ "charts": [],
+ "content": "[{\"type\": \"header\", \"data\": {\"text\": \"Onerc ITSM\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Incidents\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Service Requests\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Remote Sessions\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"SLA Compliance\", \"col\": 3}}, {\"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Operations\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Catalogue & Services\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"SLA & Priority\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Configuration\", \"col\": 4}}]",
+ "creation": "2026-06-11 15:18:46.473257",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "icon": "tool",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "ITSM",
+ "link_type": "DocType",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Operations",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Incident",
+   "link_count": 0,
+   "link_to": "Onerc Incident",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Service Request",
+   "link_count": 0,
+   "link_to": "Onerc Service Request",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Remote Support Session",
+   "link_count": 0,
+   "link_to": "Onerc Remote Support Session",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Configuration Item",
+   "link_count": 0,
+   "link_to": "Onerc Configuration Item",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Catalogue & Services",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Request Catalogue Item",
+   "link_count": 0,
+   "link_to": "Onerc Request Catalogue Item",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Service",
+   "link_count": 0,
+   "link_to": "Onerc Service",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Service Category",
+   "link_count": 0,
+   "link_to": "Onerc Service Category",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SLA & Priority",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SLA Policy",
+   "link_count": 0,
+   "link_to": "Onerc SLA Policy",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Priority Matrix",
+   "link_count": 0,
+   "link_to": "Onerc Priority Matrix",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Business Calendar",
+   "link_count": 0,
+   "link_to": "Onerc Business Calendar",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Impact",
+   "link_count": 0,
+   "link_to": "Onerc Impact",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Urgency",
+   "link_count": 0,
+   "link_to": "Onerc Urgency",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Priority",
+   "link_count": 0,
+   "link_to": "Onerc Priority",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Configuration",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Incidents Settings",
+   "link_count": 0,
+   "link_to": "Onerc Incidents Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Support Team",
+   "link_count": 0,
+   "link_to": "Onerc Support Team",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Data Classification",
+   "link_count": 0,
+   "link_to": "Onerc Data Classification",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Remote Support Settings",
+   "link_count": 0,
+   "link_to": "Onerc Remote Support Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-06-11 15:18:46.473257",
+ "modified_by": "Administrator",
+ "module": "Onerc Incident Management",
+ "name": "ITSM",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 0.0,
+ "shortcuts": [
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Incidents",
+   "link_to": "Onerc Incident",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "Service Requests",
+   "link_to": "Onerc Service Request",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Remote Sessions",
+   "link_to": "Onerc Remote Support Session",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "",
+   "label": "SLA Compliance",
+   "link_to": "Onerc SLA Compliance",
+   "report_ref_doctype": "Onerc Incident",
+   "type": "Report"
+  }
+ ],
+ "title": "ITSM",
+ "type": "Workspace"
+}
