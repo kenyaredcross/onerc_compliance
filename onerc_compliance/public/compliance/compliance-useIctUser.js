@@ -1,0 +1,1 @@
+function r(){const e=(window.__frappe_full_name__||"").trim(),s=window.__frappe_user__||"",t=e||s.split("@")[0]||"there",i=t.split(" ")[0]||t,n=(t[0]||"U").toUpperCase();return{fullName:e,email:s,display:t,firstName:i,initial:n}}export{r as u};

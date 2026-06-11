@@ -1,0 +1,102 @@
+{
+ "actions": [],
+ "creation": "2026-06-11 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_defaults",
+  "default_support_team",
+  "default_sla_policy",
+  "column_break_defaults",
+  "default_business_calendar",
+  "branch_geo_level",
+  "section_integrations",
+  "sync_to_helpdesk",
+  "section_pause",
+  "pause_statuses"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_defaults",
+   "fieldtype": "Section Break",
+   "label": "Defaults"
+  },
+  {
+   "fieldname": "default_support_team",
+   "fieldtype": "Link",
+   "label": "Default Support Team",
+   "options": "Onerc Support Team"
+  },
+  {
+   "fieldname": "default_sla_policy",
+   "fieldtype": "Link",
+   "label": "Default SLA Policy",
+   "options": "Onerc SLA Policy"
+  },
+  {
+   "fieldname": "column_break_defaults",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_business_calendar",
+   "fieldtype": "Link",
+   "label": "Default Business Calendar",
+   "options": "Onerc Business Calendar"
+  },
+  {
+   "description": "Which Geo Level (from onerc_core) represents a branch for branch_region scoping.",
+   "fieldname": "branch_geo_level",
+   "fieldtype": "Link",
+   "label": "Branch Geo Level",
+   "options": "Geo Level"
+  },
+  {
+   "fieldname": "section_integrations",
+   "fieldtype": "Section Break",
+   "label": "Integrations"
+  },
+  {
+   "default": "0",
+   "description": "When enabled, Onerc Incidents create and close a linked Helpdesk HD Ticket.",
+   "fieldname": "sync_to_helpdesk",
+   "fieldtype": "Check",
+   "label": "Sync Incidents to Helpdesk"
+  },
+  {
+   "fieldname": "section_pause",
+   "fieldtype": "Section Break",
+   "label": "SLA Pause Statuses"
+  },
+  {
+   "fieldname": "pause_statuses",
+   "fieldtype": "Table",
+   "label": "Pause Statuses",
+   "options": "Onerc Pause Status"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-06-11 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Onerc Incident Management",
+ "name": "Onerc Incidents Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

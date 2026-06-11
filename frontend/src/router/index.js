@@ -21,6 +21,16 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/ict-help',
+    component: () => import('../pages/ict/IctPortal.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      { path: '', name: 'IctHome', component: () => import('../pages/ict/HelpHome.vue') },
+      { path: 'resources', name: 'IctResources', component: () => import('../pages/ict/ResourceAccess.vue') },
+      { path: 'support', name: 'IctSupport', component: () => import('../pages/ict/SupportCenter.vue') },
+    ],
+  },
   { path: '/:pathMatch(.*)*', redirect: '/compliance' },
 ]
 

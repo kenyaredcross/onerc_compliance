@@ -1,0 +1,142 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:policy_name",
+ "creation": "2026-06-11 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "policy_name",
+  "enabled",
+  "is_default",
+  "section_match",
+  "priority",
+  "service",
+  "column_break_match",
+  "service_category",
+  "support_team",
+  "section_targets",
+  "first_response_minutes",
+  "resolution_minutes",
+  "business_calendar",
+  "section_escalations",
+  "escalation_steps"
+ ],
+ "fields": [
+  {
+   "fieldname": "policy_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Policy Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "default": "0",
+   "description": "Used when no more specific policy matches.",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "label": "Is Default"
+  },
+  {
+   "description": "Leave a criterion blank to treat it as a wildcard. The most specific matching policy wins.",
+   "fieldname": "section_match",
+   "fieldtype": "Section Break",
+   "label": "Applies To"
+  },
+  {
+   "fieldname": "priority",
+   "fieldtype": "Link",
+   "label": "Priority",
+   "options": "Onerc Priority"
+  },
+  {
+   "fieldname": "service",
+   "fieldtype": "Link",
+   "label": "Service",
+   "options": "Onerc Service"
+  },
+  {
+   "fieldname": "column_break_match",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "service_category",
+   "fieldtype": "Link",
+   "label": "Service Category",
+   "options": "Onerc Service Category"
+  },
+  {
+   "fieldname": "support_team",
+   "fieldtype": "Link",
+   "label": "Support Team",
+   "options": "Onerc Support Team"
+  },
+  {
+   "fieldname": "section_targets",
+   "fieldtype": "Section Break",
+   "label": "Targets (Working Minutes)"
+  },
+  {
+   "fieldname": "first_response_minutes",
+   "fieldtype": "Int",
+   "label": "First Response (minutes)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "resolution_minutes",
+   "fieldtype": "Int",
+   "label": "Resolution (minutes)",
+   "reqd": 1
+  },
+  {
+   "description": "Working calendar these targets are measured against. Defaults to the calendar in Onerc Incidents Settings.",
+   "fieldname": "business_calendar",
+   "fieldtype": "Link",
+   "label": "Business Calendar",
+   "options": "Onerc Business Calendar"
+  },
+  {
+   "fieldname": "section_escalations",
+   "fieldtype": "Section Break",
+   "label": "Escalation Steps"
+  },
+  {
+   "fieldname": "escalation_steps",
+   "fieldtype": "Table",
+   "label": "Escalation Steps",
+   "options": "Onerc SLA Escalation Step"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-11 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Onerc Incident Management",
+ "naming_rule": "By fieldname",
+ "name": "Onerc SLA Policy",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

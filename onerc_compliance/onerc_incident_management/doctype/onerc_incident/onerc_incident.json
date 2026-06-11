@@ -1,0 +1,441 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "INC-.YYYY.-.#####",
+ "creation": "2026-06-10 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_details",
+  "title",
+  "reported_by",
+  "date_reported",
+  "channel",
+  "column_break_details",
+  "branch_region",
+  "support_team",
+  "assigned_to",
+  "section_description",
+  "description",
+  "section_classification",
+  "affected_service",
+  "affected_ci",
+  "data_classification",
+  "column_break_classification",
+  "impact",
+  "urgency",
+  "priority",
+  "section_sla",
+  "sla_policy",
+  "first_response_due",
+  "resolution_due",
+  "first_responded_on",
+  "resolved_on",
+  "column_break_sla",
+  "on_hold_since",
+  "total_hold_minutes",
+  "response_breached",
+  "resolution_breached",
+  "sla_status",
+  "section_status",
+  "status",
+  "overall_progress",
+  "hod_notified",
+  "column_break_status",
+  "expected_resolution_date",
+  "actual_resolution_date",
+  "section_resolution",
+  "resolution_category",
+  "resolution_summary",
+  "column_break_resolution",
+  "resolved_by",
+  "resolution_datetime",
+  "section_affected_users",
+  "affected_users",
+  "affected_department",
+  "affected_individual",
+  "section_public",
+  "show_on_dashboard",
+  "current_status_message",
+  "stakeholders_notified",
+  "section_helpdesk",
+  "helpdesk_ticket",
+  "section_activity",
+  "progress_updates"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_details",
+   "fieldtype": "Section Break",
+   "label": "Incident"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reported_by",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Reported By",
+   "options": "User"
+  },
+  {
+   "fieldname": "date_reported",
+   "fieldtype": "Datetime",
+   "label": "Date & Time Reported",
+   "read_only": 1
+  },
+  {
+   "fieldname": "channel",
+   "fieldtype": "Select",
+   "label": "Channel",
+   "options": "Phone\nEmail\nWalk-in\nPortal\nMonitoring\nOther"
+  },
+  {
+   "fieldname": "column_break_details",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "branch_region",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Branch / Region",
+   "options": "Geo Node"
+  },
+  {
+   "fieldname": "support_team",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Support Team",
+   "options": "Onerc Support Team"
+  },
+  {
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "label": "Assigned To",
+   "options": "User"
+  },
+  {
+   "fieldname": "section_description",
+   "fieldtype": "Section Break",
+   "label": "Description"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Long Text",
+   "label": "Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_classification",
+   "fieldtype": "Section Break",
+   "label": "Classification & Priority"
+  },
+  {
+   "fieldname": "affected_service",
+   "fieldtype": "Link",
+   "label": "Affected Service",
+   "options": "Onerc Service"
+  },
+  {
+   "fieldname": "affected_ci",
+   "fieldtype": "Link",
+   "label": "Affected Configuration Item",
+   "options": "Onerc Configuration Item"
+  },
+  {
+   "description": "Sensitive. Visible only to users granted permission level 1.",
+   "fieldname": "data_classification",
+   "fieldtype": "Link",
+   "label": "Data Classification",
+   "options": "Onerc Data Classification",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_classification",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "impact",
+   "fieldtype": "Link",
+   "label": "Impact",
+   "options": "Onerc Impact",
+   "reqd": 1
+  },
+  {
+   "fieldname": "urgency",
+   "fieldtype": "Link",
+   "label": "Urgency",
+   "options": "Onerc Urgency",
+   "reqd": 1
+  },
+  {
+   "description": "Derived from Impact × Urgency via the Priority Matrix — never typed.",
+   "fieldname": "priority",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Priority",
+   "options": "Onerc Priority",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_sla",
+   "fieldtype": "Section Break",
+   "label": "SLA"
+  },
+  {
+   "fieldname": "sla_policy",
+   "fieldtype": "Link",
+   "label": "SLA Policy",
+   "options": "Onerc SLA Policy",
+   "read_only": 1
+  },
+  {
+   "fieldname": "first_response_due",
+   "fieldtype": "Datetime",
+   "label": "First Response Due",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolution_due",
+   "fieldtype": "Datetime",
+   "label": "Resolution Due",
+   "read_only": 1
+  },
+  {
+   "fieldname": "first_responded_on",
+   "fieldtype": "Datetime",
+   "label": "First Responded On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolved_on",
+   "fieldtype": "Datetime",
+   "label": "Resolved On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_sla",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "on_hold_since",
+   "fieldtype": "Datetime",
+   "label": "On Hold Since",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_hold_minutes",
+   "fieldtype": "Float",
+   "label": "Total Hold (working minutes)",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "response_breached",
+   "fieldtype": "Check",
+   "label": "Response Breached",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "resolution_breached",
+   "fieldtype": "Check",
+   "label": "Resolution Breached",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sla_status",
+   "fieldtype": "Select",
+   "label": "SLA Status",
+   "options": "Ongoing\nPaused\nFulfilled\nBreached",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_status",
+   "fieldtype": "Section Break",
+   "label": "Status & Progress"
+  },
+  {
+   "default": "New",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "New\nAssigned\nIn Progress\nPending\nResolved\nClosed\nCancelled"
+  },
+  {
+   "fieldname": "overall_progress",
+   "fieldtype": "Percent",
+   "label": "Overall Progress"
+  },
+  {
+   "default": "0",
+   "fieldname": "hod_notified",
+   "fieldtype": "Check",
+   "label": "HOD Notified"
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "expected_resolution_date",
+   "fieldtype": "Date",
+   "label": "Expected Resolution Date"
+  },
+  {
+   "fieldname": "actual_resolution_date",
+   "fieldtype": "Date",
+   "label": "Actual Resolution Date"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_resolution",
+   "fieldtype": "Section Break",
+   "label": "Resolution"
+  },
+  {
+   "fieldname": "resolution_category",
+   "fieldtype": "Select",
+   "label": "Resolution Category",
+   "options": "\nFixed\nWorkaround\nNo Fault Found\nDuplicate\nConfiguration\nUser Error\nOther"
+  },
+  {
+   "fieldname": "resolution_summary",
+   "fieldtype": "Long Text",
+   "label": "Resolution Summary"
+  },
+  {
+   "fieldname": "column_break_resolution",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "resolved_by",
+   "fieldtype": "Link",
+   "label": "Resolved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolution_datetime",
+   "fieldtype": "Datetime",
+   "label": "Resolution Date & Time",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_affected_users",
+   "fieldtype": "Section Break",
+   "label": "Affected Users"
+  },
+  {
+   "fieldname": "affected_users",
+   "fieldtype": "Select",
+   "label": "Affected Users",
+   "options": "\nAll Staff\nSpecific Department\nIndividual"
+  },
+  {
+   "depends_on": "eval:doc.affected_users=='Specific Department'",
+   "fieldname": "affected_department",
+   "fieldtype": "Data",
+   "label": "Affected Department"
+  },
+  {
+   "depends_on": "eval:doc.affected_users=='Individual'",
+   "fieldname": "affected_individual",
+   "fieldtype": "Link",
+   "label": "Affected Individual",
+   "options": "User"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_public",
+   "fieldtype": "Section Break",
+   "label": "Public Communication"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_on_dashboard",
+   "fieldtype": "Check",
+   "label": "Show on Staff Dashboard"
+  },
+  {
+   "fieldname": "current_status_message",
+   "fieldtype": "Data",
+   "label": "Current Status Message"
+  },
+  {
+   "default": "0",
+   "fieldname": "stakeholders_notified",
+   "fieldtype": "Check",
+   "label": "Stakeholders Notified"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_helpdesk",
+   "fieldtype": "Section Break",
+   "label": "Helpdesk"
+  },
+  {
+   "description": "Linked Helpdesk ticket. The Onerc Incident is the source of truth.",
+   "fieldname": "helpdesk_ticket",
+   "fieldtype": "Link",
+   "label": "Helpdesk Ticket",
+   "options": "HD Ticket",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_activity",
+   "fieldtype": "Section Break",
+   "label": "Activity / Progress Updates"
+  },
+  {
+   "fieldname": "progress_updates",
+   "fieldtype": "Table",
+   "label": "Progress Updates",
+   "options": "Onerc Incident Activity"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-11 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Onerc Incident Management",
+ "name": "Onerc Incident",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}
