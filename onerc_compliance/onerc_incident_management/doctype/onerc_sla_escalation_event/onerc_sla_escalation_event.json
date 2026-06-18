@@ -1,0 +1,87 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-06-11 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "reference_doctype",
+  "reference_name",
+  "policy",
+  "escalation_step",
+  "step_label",
+  "applies_to",
+  "fired_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Reference Doctype",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Reference Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "policy",
+   "fieldtype": "Link",
+   "label": "SLA Policy",
+   "options": "Onerc SLA Policy",
+   "read_only": 1
+  },
+  {
+   "fieldname": "escalation_step",
+   "fieldtype": "Data",
+   "label": "Escalation Step Row",
+   "read_only": 1
+  },
+  {
+   "fieldname": "step_label",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Step",
+   "read_only": 1
+  },
+  {
+   "fieldname": "applies_to",
+   "fieldtype": "Data",
+   "label": "Applies To",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fired_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Fired On",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-06-11 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Onerc Incident Management",
+ "name": "Onerc SLA Escalation Event",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

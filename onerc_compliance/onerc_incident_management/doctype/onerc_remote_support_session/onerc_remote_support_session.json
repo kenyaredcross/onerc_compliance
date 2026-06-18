@@ -1,0 +1,146 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "RS-.YYYY.-.#####",
+ "creation": "2026-06-11 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_link",
+  "reference_type",
+  "reference_name",
+  "column_break_link",
+  "agent",
+  "target_user",
+  "section_provider",
+  "session_token",
+  "provider_session_id",
+  "consent_given",
+  "column_break_provider",
+  "status",
+  "started_on",
+  "ended_on",
+  "duration"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_link",
+   "fieldtype": "Section Break",
+   "label": "Linked Record"
+  },
+  {
+   "fieldname": "reference_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Reference Type",
+   "options": "Onerc Incident\nOnerc Service Request",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Reference Name",
+   "options": "reference_type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_link",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "agent",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Agent",
+   "options": "User"
+  },
+  {
+   "fieldname": "target_user",
+   "fieldtype": "Link",
+   "label": "Target User",
+   "options": "User"
+  },
+  {
+   "fieldname": "section_provider",
+   "fieldtype": "Section Break",
+   "label": "Session"
+  },
+  {
+   "fieldname": "session_token",
+   "fieldtype": "Data",
+   "label": "Session Token",
+   "read_only": 1
+  },
+  {
+   "fieldname": "provider_session_id",
+   "fieldtype": "Data",
+   "label": "Provider Session ID",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "consent_given",
+   "fieldtype": "Check",
+   "label": "Consent Given"
+  },
+  {
+   "fieldname": "column_break_provider",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Requested",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Requested\nActive\nEnded\nCancelled"
+  },
+  {
+   "fieldname": "started_on",
+   "fieldtype": "Datetime",
+   "label": "Started On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ended_on",
+   "fieldtype": "Datetime",
+   "label": "Ended On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "duration",
+   "fieldtype": "Duration",
+   "label": "Duration",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-11 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Onerc Incident Management",
+ "name": "Onerc Remote Support Session",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "reference_name"
+}
