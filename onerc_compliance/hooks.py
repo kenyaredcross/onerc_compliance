@@ -15,7 +15,6 @@ website_route_rules = [
 scheduler_events = {
 	"daily": [
 		"onerc_compliance.tasks.close_expired_requirements",
-		"onerc_compliance.tasks.send_compliance_reminders",
 	],
 	"cron": {
 		# ITSM SLA breach + escalation scan (every 10 minutes)

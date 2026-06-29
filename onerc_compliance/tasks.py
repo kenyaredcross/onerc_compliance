@@ -1,6 +1,13 @@
 # Copyright (c) 2026, Kelvin Njenga and contributors
 # For license information, please see license.txt
 
+# NOTE: Email reminders are disabled by design. `send_compliance_reminders`
+# (and its inline reminder logic) is intentionally left in place but is no
+# longer wired into scheduler_events in hooks.py, so it does not run. Staff
+# are now nudged via in-app notifications in the frontend instead of email.
+# The function is kept so its lead/repeat-day logic can be repurposed for
+# those notifications later.
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, getdate, now_datetime, today
