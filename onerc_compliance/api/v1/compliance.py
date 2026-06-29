@@ -7,7 +7,12 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 
-from onerc_compliance.utils import employee_in_scope, ensure_submission, get_employee_for_user
+from onerc_compliance.utils import (
+	employee_in_scope,
+	ensure_submission,
+	get_employee_for_user,
+	link_file_to_submission,
+)
 
 
 def _ok(data, message="", meta=None):
@@ -138,6 +143,15 @@ def submit_requirement(requirement, answers):
 
 	sub.status = "Submitted" if req_doc.requires_review else "Reviewed"
 	sub.save(ignore_permissions=True)
+
+	# Link every uploaded private File to this submission so reviewers inherit
+	# read access (without granting blanket File read or making files public).
+	for schema_field in req_doc.fields:
+		if schema_field.fieldtype != "Attach":
+			continue
+		file_url = answers.get(schema_field.fieldname)
+		if file_url:
+			link_file_to_submission(file_url, sub.name, schema_field.fieldname)
 
 	return _ok({"submission": sub.name, "status": sub.status})
 
