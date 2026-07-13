@@ -114,3 +114,50 @@ class IntegrationTestComplianceRequirement(IntegrationTestCase):
 			{"requirement": req.name, "employee": emp_name},
 		)
 		self.assertEqual(count, 1, "Re-saving an Active requirement must not duplicate submissions")
+
+	def test_reopen_closed_requirement_resets_overdue_and_allows_submit(self):
+		emp_name = self._make_test_employee()
+
+		# Active requirement auto-generates a Pending submission for the employee.
+		req = self._make_requirement(title="_test-req-reopen", status="Active")
+		sub_name = frappe.db.get_value(
+			"Compliance Submission",
+			{"requirement": req.name, "employee": emp_name},
+			"name",
+		)
+		self.assertIsNotNone(sub_name)
+
+		# Simulate the daily job after the deadline passes: the requirement is
+		# Closed and the non-submitter's submission is flipped to Overdue.
+		frappe.db.set_value("Compliance Requirement", req.name, "status", "Closed")
+		frappe.db.set_value("Compliance Submission", sub_name, "status", "Overdue")
+
+		# HR extends the deadline into the future and reopens the requirement.
+		req.reload()
+		req.deadline = "2099-12-31 23:59:00"
+		req.status = "Active"
+		req.save(ignore_permissions=True)
+
+		# The Overdue submission is reset to Pending on reopen.
+		self.assertEqual(
+			frappe.db.get_value("Compliance Submission", sub_name, "status"),
+			"Pending",
+			"Reopening a Closed requirement must reset Overdue submissions to Pending",
+		)
+
+		# And it can now be submitted by staff (Pending -> Submitted is valid again).
+		sub = frappe.get_doc("Compliance Submission", sub_name)
+		sub.status = "Submitted"
+		sub.save(ignore_permissions=True)
+		self.assertEqual(
+			frappe.db.get_value("Compliance Submission", sub_name, "status"),
+			"Submitted",
+		)
+
+	def test_activating_with_past_deadline_raises(self):
+		doc = self._make_requirement(title="_test-req-stale")
+		doc.reload()
+		doc.deadline = "2000-01-01 00:00:00"
+		doc.status = "Active"
+		with self.assertRaises(frappe.ValidationError):
+			doc.save(ignore_permissions=True)

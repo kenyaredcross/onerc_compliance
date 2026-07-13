@@ -4,6 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe.utils import get_datetime, now_datetime
 
 
 class ComplianceRequirement(Document):
@@ -18,11 +19,21 @@ class ComplianceRequirement(Document):
 
 		self._validate_fields()
 		self._validate_targeting()
+		self._validate_deadline_not_past()
 		self._validate_schema_freeze()
 
 	def on_update(self):
-		if self.status == "Active" and self._prev_status != "Active":
+		became_active = self.status == "Active" and self._prev_status != "Active"
+		if became_active:
 			self._generate_submissions()
+
+		# Reopen path: when an expired (Closed) requirement is set back to Active
+		# — typically after its deadline was extended — the daily job has already
+		# flipped non-submitters to Overdue and those submissions can no longer be
+		# edited by staff. Reset them to Pending so people can fill them in again.
+		# Submitted / Reviewed / Rejected submissions are intentionally left alone.
+		if self.status == "Active" and self._prev_status == "Closed":
+			self._reset_overdue_submissions()
 
 	# ------------------------------------------------------------------
 	# Helpers
@@ -49,6 +60,30 @@ class ComplianceRequirement(Document):
 				frappe.throw(
 					_("Field '{0}' is of type Select and must have Options.").format(row.label)
 				)
+
+	def _validate_deadline_not_past(self):
+		# Guardrail against reactivating with a stale date: an Active requirement
+		# whose deadline is already in the past would just be Closed again by the
+		# next run of close_expired_requirements. Force a future deadline first.
+		if self.status != "Active":
+			return
+		if not self.deadline:
+			return
+		if get_datetime(self.deadline) < now_datetime():
+			frappe.throw(
+				_("The deadline has passed. Set a future deadline before activating this requirement.")
+			)
+
+	def _reset_overdue_submissions(self):
+		overdue = frappe.get_all(
+			"Compliance Submission",
+			filters={"requirement": self.name, "status": "Overdue"},
+			pluck="name",
+		)
+		for sub_name in overdue:
+			sub = frappe.get_doc("Compliance Submission", sub_name)
+			sub.status = "Pending"
+			sub.save(ignore_permissions=True)
 
 	def _validate_targeting(self):
 		if self.target_type == "By Department":
@@ -99,3 +134,34 @@ class ComplianceRequirement(Document):
 		else:
 			for emp in employees:
 				ensure_submission(self.name, emp)
+
+
+def reopen_requirement(name):
+	"""Set a requirement back to Active and reopen its Overdue submissions.
+
+	Operational one-shot for a requirement that the daily job already closed:
+	flips the requirement to Active (which throws if the deadline is still in
+	the past — extend it first) and resets every Overdue submission back to
+	Pending so staff can fill them in again. Safe to run from
+	`bench --site <site> execute
+	onerc_compliance.onerc_compliance.doctype.compliance_requirement.compliance_requirement.reopen_requirement
+	--kwargs '{"name": "COMPLIANCE-2026-0001"}'`.
+	"""
+	doc = frappe.get_doc("Compliance Requirement", name)
+	doc.status = "Active"
+	doc.save(ignore_permissions=True)
+
+	# on_update already resets Overdue -> Pending when reopening from Closed;
+	# repeat it here so the helper is self-contained regardless of prior status.
+	overdue = frappe.get_all(
+		"Compliance Submission",
+		filters={"requirement": name, "status": "Overdue"},
+		pluck="name",
+	)
+	for sub_name in overdue:
+		sub = frappe.get_doc("Compliance Submission", sub_name)
+		sub.status = "Pending"
+		sub.save(ignore_permissions=True)
+
+	frappe.db.commit()
+	return {"requirement": name, "reopened_submissions": len(overdue)}

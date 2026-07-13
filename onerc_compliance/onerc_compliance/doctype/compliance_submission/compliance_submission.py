@@ -12,7 +12,7 @@ ALLOWED_TRANSITIONS = {
 	"Submitted": {"Reviewed", "Needs More Info", "Rejected"},
 	"Needs More Info": {"Submitted", "Reviewed", "Overdue"},
 	"Rejected": {"Submitted"},
-	"Overdue": {"Submitted"},
+	"Overdue": {"Submitted", "Pending"},
 	"Reviewed": set(),
 	"Exempted": set(),
 }
