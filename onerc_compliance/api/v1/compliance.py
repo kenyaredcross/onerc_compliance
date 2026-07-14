@@ -191,19 +191,57 @@ def review_submission(submission, action, remarks=None):
 
 
 @frappe.whitelist()
-def get_submissions(requirement, status=None):
+def get_submissions(requirement, status=None, search=None, department=None, page=1, page_length=50):
 	# Requires write on Compliance Submission — employees are read-only and must be denied.
 	frappe.has_permission("Compliance Submission", ptype="write", throw=True)
 
-	filters = {"requirement": requirement}
+	page = max(1, int(page or 1))
+	page_length = int(page_length or 50)
+	if page_length <= 0:
+		page_length = 50
+
+	# AND filters — requirement, status and department all narrow the set together.
+	filters = [["requirement", "=", requirement]]
 	if status:
-		filters["status"] = status
+		filters.append(["status", "=", status])
+	if department:
+		if department == "Unassigned":
+			# "not set" resolves to department IS NULL OR department = ''.
+			filters.append(["department", "is", "not set"])
+		else:
+			filters.append(["department", "=", department])
+
+	# OR group — a search term matches either the display name or the employee ID.
+	# Frappe builds the WHERE clause as `(filters ANDed) AND (or_filters ORed)`, so
+	# this composes with the status/department filters above. "like" is a
+	# case-insensitive partial match under the default (…_ci) collation.
+	or_filters = None
+	if search and search.strip():
+		term = "%{0}%".format(search.strip())
+		or_filters = [
+			["employee_name", "like", term],
+			["employee", "like", term],
+		]
+
+	# Total across the whole filtered set (all pages) so the frontend can show
+	# "showing X of Y" and know when to stop paging.
+	total_count = len(
+		frappe.get_all(
+			"Compliance Submission",
+			filters=filters,
+			or_filters=or_filters,
+			fields=["name"],
+		)
+	)
 
 	rows = frappe.get_all(
 		"Compliance Submission",
 		filters=filters,
+		or_filters=or_filters,
 		fields=["name", "employee_name", "department", "status", "submitted_on"],
-		limit=500,
+		order_by="employee_name asc, name asc",
+		limit=page_length,
+		offset=(page - 1) * page_length,
 	)
 
 	req_doc = frappe.get_doc("Compliance Requirement", requirement)
@@ -248,7 +286,13 @@ def get_submissions(requirement, status=None):
 			"review_actions": review_actions,
 		})
 
-	return _ok(result)
+	meta = {
+		"total_count": total_count,
+		"page": page,
+		"page_length": page_length,
+		"returned": len(result),
+	}
+	return _ok(result, meta=meta)
 
 
 @frappe.whitelist()
@@ -277,6 +321,12 @@ def get_dashboard(requirement):
 		if sub.status == "Reviewed":
 			dept_map[dept]["reviewed"] += 1
 
+	# Distinct departments actually present on this requirement's submissions, so the
+	# frontend dropdown lists real values (plus an "Unassigned" bucket) rather than
+	# every Department in the system. "Unassigned" is appended last if any exist.
+	real_depts = sorted(d for d in dept_map if d != "Unassigned")
+	departments = real_depts + (["Unassigned"] if "Unassigned" in dept_map else [])
+
 	reviewed_count = status_counts.get("Reviewed", 0)
 	known_total = len(submissions)
 	expected = req_doc.expected_headcount or 0
@@ -287,6 +337,7 @@ def get_dashboard(requirement):
 		"requirement": requirement,
 		"status_counts": status_counts,
 		"by_department": list(dept_map.values()),
+		"departments": departments,
 		"reviewed_count": reviewed_count,
 		"known_total": known_total,
 		"expected_headcount": expected,

@@ -112,20 +112,59 @@
 
       <!-- Submission list (get_submissions) -->
       <div class="card overflow-hidden">
-        <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-3 flex-wrap">
-          <h3 class="text-sm font-semibold text-gray-700 flex-1">Submissions</h3>
-          <select
-            class="input-field text-sm w-44"
-            v-model="statusFilter"
-            @change="loadSubmissions"
-          >
-            <option value="">All statuses</option>
-            <option v-for="s in statusOrder" :key="s" :value="s">{{ s }}</option>
-            <option value="Exempted">Exempted</option>
-          </select>
+        <!-- Filter bar -->
+        <div class="px-4 py-3 border-b border-gray-100 space-y-3">
+          <div class="flex items-center gap-3 flex-wrap">
+            <h3 class="text-sm font-semibold text-gray-700 flex-1">Submissions</h3>
+            <button
+              v-if="hasActiveFilters"
+              class="btn-secondary text-xs py-1.5"
+              @click="clearFilters"
+            >Clear filters</button>
+          </div>
+          <div class="flex items-center gap-3 flex-wrap">
+            <!-- Search -->
+            <div class="relative flex-1 min-w-[12rem]">
+              <svg
+                class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/>
+              </svg>
+              <input
+                type="text"
+                class="input-field text-sm pl-9"
+                placeholder="Search by name or staff ID"
+                v-model="searchTerm"
+                @input="onSearchInput"
+              />
+            </div>
+            <!-- Department -->
+            <select
+              class="input-field text-sm w-44"
+              v-model="departmentFilter"
+              @change="onFilterChange"
+            >
+              <option value="">All departments</option>
+              <option v-for="d in departmentOptions" :key="d" :value="d">{{ d }}</option>
+            </select>
+            <!-- Status -->
+            <select
+              class="input-field text-sm w-44"
+              v-model="statusFilter"
+              @change="onFilterChange"
+            >
+              <option value="">All statuses</option>
+              <option v-for="s in statusOrder" :key="s" :value="s">{{ s }}</option>
+              <option value="Exempted">Exempted</option>
+            </select>
+          </div>
         </div>
 
         <div v-if="subsLoading" class="py-8 text-center text-gray-400 text-sm">Loading submissions…</div>
+        <div v-else-if="!submissions.length && hasActiveFilters" class="py-8 text-center text-gray-400 text-sm">
+          No submissions match these filters.
+        </div>
         <div v-else-if="!submissions.length" class="py-8 text-center text-gray-400 text-sm">
           No submissions found.
         </div>
@@ -254,6 +293,29 @@
             </div>
           </div>
         </div>
+
+        <!-- Result count + pagination -->
+        <div
+          v-if="!subsLoading && submissions.length"
+          class="px-4 py-3 border-t border-gray-100 flex items-center justify-between gap-3 flex-wrap"
+        >
+          <p class="text-xs text-gray-500">
+            Showing {{ submissions.length }} of {{ totalCount }} submissions
+          </p>
+          <div v-if="totalPages > 1" class="flex items-center gap-2">
+            <button
+              class="btn-secondary text-xs py-1.5"
+              :disabled="page <= 1"
+              @click="goToPage(page - 1)"
+            >Previous</button>
+            <span class="text-xs text-gray-500">Page {{ page }} of {{ totalPages }}</span>
+            <button
+              class="btn-secondary text-xs py-1.5"
+              :disabled="page >= totalPages"
+              @click="goToPage(page + 1)"
+            >Next</button>
+          </div>
+        </div>
       </div>
     </template>
 
@@ -277,11 +339,23 @@ const requirementList = ref([])
 const reqListError = ref('')
 const selectedRequirement = ref('')
 const statusFilter = ref('')
+const searchTerm = ref('')
+const departmentFilter = ref('')
+
+const page = ref(1)
+const pageLength = 50
+const totalCount = ref(0)
 
 const dashLoading = ref(false)
 const subsLoading = ref(false)
 const dashboard = ref(null)
 const submissions = ref([])
+
+const departmentOptions = computed(() => dashboard.value?.departments || [])
+const totalPages = computed(() => Math.max(1, Math.ceil(totalCount.value / pageLength)))
+const hasActiveFilters = computed(
+  () => !!(searchTerm.value.trim() || departmentFilter.value || statusFilter.value)
+)
 
 const expandedSub = ref(null)
 const activeReview = ref(null)
@@ -306,12 +380,53 @@ async function loadRequirementList() {
 }
 
 async function onRequirementChange() {
+  // Switching requirement: drop any filters and paging from the previous one.
+  resetFilterState()
   if (!selectedRequirement.value) {
     dashboard.value = null
     submissions.value = []
+    totalCount.value = 0
     return
   }
   await refresh()
+}
+
+function resetFilterState() {
+  searchTerm.value = ''
+  departmentFilter.value = ''
+  statusFilter.value = ''
+  page.value = 1
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+    searchTimer = null
+  }
+}
+
+let searchTimer = null
+
+function onSearchInput() {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    page.value = 1
+    loadSubmissions()
+  }, 300)
+}
+
+// Status / department change: reset to the first page, then reload.
+function onFilterChange() {
+  page.value = 1
+  loadSubmissions()
+}
+
+function clearFilters() {
+  resetFilterState()
+  loadSubmissions()
+}
+
+function goToPage(target) {
+  if (target < 1 || target > totalPages.value) return
+  page.value = target
+  loadSubmissions()
 }
 
 async function refresh() {
@@ -335,10 +450,17 @@ async function loadDashboard() {
 async function loadSubmissions() {
   subsLoading.value = true
   try {
-    const args = { requirement: selectedRequirement.value }
+    const args = {
+      requirement: selectedRequirement.value,
+      page: page.value,
+      page_length: pageLength,
+    }
     if (statusFilter.value) args.status = statusFilter.value
+    if (departmentFilter.value) args.department = departmentFilter.value
+    if (searchTerm.value.trim()) args.search = searchTerm.value.trim()
     const result = await call('onerc_compliance.api.v1.compliance.get_submissions', args)
     submissions.value = result?.data || []
+    totalCount.value = result?.meta?.total_count ?? submissions.value.length
   } catch (e) {
     toast.error(e.message || 'Failed to load submissions.')
   } finally {

@@ -59,6 +59,11 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		frappe.db.delete("Employee", {"first_name": ["like", "_test-emp-%"]})
 		if frappe.db.exists("User", _STAFF_USER_EMAIL):
 			frappe.delete_doc("User", _STAFF_USER_EMAIL, force=True, ignore_permissions=True)
+		empty_dept = frappe.db.get_value(
+			"Department", {"department_name": "_Test Compliance Empty Dept"}, "name"
+		)
+		if empty_dept:
+			frappe.delete_doc("Department", empty_dept, force=True, ignore_permissions=True)
 
 	def _make_staff_user(self):
 		"""Create (or reuse) a user that has the Employee role only — no Compliance Officer."""
@@ -106,12 +111,52 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		emp.insert(ignore_permissions=True)
 		return emp.name
 
-	def _make_submission(self, requirement_name, employee_name, status="Pending"):
+	def _make_submission(
+		self, requirement_name, employee_name, status="Pending", display_name=None, department=None
+	):
 		doc = frappe.get_doc({
 			"doctype": "Compliance Submission",
 			"requirement": requirement_name,
 			"employee": employee_name,
 			"status": status,
+		})
+		# employee_name is read-only (normally fetched from Employee); set it directly so
+		# search tests have a deterministic display name to match against.
+		if display_name is not None:
+			doc.employee_name = display_name
+		if department is not None:
+			doc.department = department
+		doc.insert(ignore_permissions=True)
+		return doc
+
+	def _make_empty_department(self):
+		"""A department with no employees, used to scope a requirement so that
+		_generate_submissions() creates ZERO auto-submissions. Every submission on
+		the requirement is then one the test created — making counts deterministic."""
+		name = "_Test Compliance Empty Dept"
+		existing = frappe.db.get_value("Department", {"department_name": name}, "name")
+		if existing:
+			return existing
+		dept = frappe.get_doc({
+			"doctype": "Department",
+			"department_name": name,
+			"company": "United Nations",
+		})
+		dept.insert(ignore_permissions=True)
+		return dept.name
+
+	def _make_scoped_requirement(self, title, dept):
+		"""Requirement targeting a single department, so auto-generation is confined
+		to that department's employees."""
+		doc = frappe.get_doc({
+			"doctype": "Compliance Requirement",
+			"title": title,
+			"target_type": "By Department",
+			"target_departments": [{"department": dept}],
+			"deadline": "2099-12-31 23:59:00",
+			"status": "Active",
+			"requires_review": 1,
+			"fields": [],
 		})
 		doc.insert(ignore_permissions=True)
 		return doc
@@ -189,6 +234,139 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		overdue_result = get_submissions(requirement=req.name, status="Overdue")
 		self.assertEqual(len(overdue_result["data"]), 1)
 		self.assertEqual(overdue_result["data"][0]["name"], sub_b.name)
+
+	def test_get_submissions_search_by_partial_name(self):
+		dept = self._make_empty_department()
+		req = self._make_scoped_requirement("_test-sub-req-search", dept)
+		emp_a = self._make_employee(suffix="search-a")
+		emp_b = self._make_employee(suffix="search-b")
+		self._make_submission(req.name, emp_a, display_name="Wanjiru Kamau")
+		self._make_submission(req.name, emp_b, display_name="Otieno Odhiambo")
+
+		from onerc_compliance.api.v1.compliance import get_submissions
+
+		# Partial, case-insensitive match on employee_name.
+		result = get_submissions(requirement=req.name, search="wanj")
+		names = [s["employee_name"] for s in result["data"]]
+		self.assertEqual(names, ["Wanjiru Kamau"])
+		self.assertEqual(result["meta"]["total_count"], 1)
+
+		# A term matching neither name returns nothing.
+		empty = get_submissions(requirement=req.name, search="zzznomatch")
+		self.assertEqual(empty["data"], [])
+		self.assertEqual(empty["meta"]["total_count"], 0)
+
+	def test_get_submissions_search_by_employee_id(self):
+		dept = self._make_empty_department()
+		req = self._make_scoped_requirement("_test-sub-req-search-id", dept)
+		emp_a = self._make_employee(suffix="search-id-a")
+		self._make_submission(req.name, emp_a, display_name="No Name Match")
+
+		from onerc_compliance.api.v1.compliance import get_submissions
+
+		# Search matches the employee ID even when the display name doesn't.
+		result = get_submissions(requirement=req.name, search=emp_a.lower())
+		matched = [s["name"] for s in result["data"]]
+		self.assertEqual(len(matched), 1)
+
+	def test_get_submissions_department_filter(self):
+		dept = self._make_empty_department()
+		req = self._make_scoped_requirement("_test-sub-req-dept", dept)
+		emp_a = self._make_employee(suffix="dept-a")
+		emp_b = self._make_employee(suffix="dept-b")
+		emp_c = self._make_employee(suffix="dept-c")
+		self._make_submission(req.name, emp_a, display_name="A", department="Accounts")
+		self._make_submission(req.name, emp_b, display_name="B", department="Marketing")
+		# emp_c: no department -> Unassigned
+		self._make_submission(req.name, emp_c, display_name="C")
+
+		from onerc_compliance.api.v1.compliance import get_submissions
+
+		acc = get_submissions(requirement=req.name, department="Accounts")
+		self.assertEqual([s["department"] for s in acc["data"]], ["Accounts"])
+		self.assertEqual(acc["meta"]["total_count"], 1)
+
+		# "Unassigned" matches the submission with no department.
+		un = get_submissions(requirement=req.name, department="Unassigned")
+		self.assertEqual(un["meta"]["total_count"], 1)
+		self.assertEqual(un["data"][0]["employee_name"], "C")
+		self.assertEqual(un["data"][0]["department"], "")
+
+		# No filter returns all three.
+		allr = get_submissions(requirement=req.name)
+		self.assertEqual(allr["meta"]["total_count"], 3)
+
+	def test_get_submissions_filters_combine(self):
+		dept = self._make_empty_department()
+		req = self._make_scoped_requirement("_test-sub-req-combine", dept)
+		emp_a = self._make_employee(suffix="combine-a")
+		emp_b = self._make_employee(suffix="combine-b")
+		emp_c = self._make_employee(suffix="combine-c")
+		# Same department, differing status + name.
+		self._make_submission(
+			req.name, emp_a, status="Overdue", display_name="Kamau One", department="Accounts"
+		)
+		self._make_submission(
+			req.name, emp_b, status="Pending", display_name="Kamau Two", department="Accounts"
+		)
+		self._make_submission(
+			req.name, emp_c, status="Overdue", display_name="Wanjiru Three", department="Marketing"
+		)
+
+		from onerc_compliance.api.v1.compliance import get_submissions
+
+		# status + department + search all AND together.
+		res = get_submissions(
+			requirement=req.name, status="Overdue", department="Accounts", search="kamau"
+		)
+		self.assertEqual(res["meta"]["total_count"], 1)
+		self.assertEqual(res["data"][0]["employee_name"], "Kamau One")
+
+		# search alone spans both Accounts "Kamau" rows.
+		res2 = get_submissions(requirement=req.name, search="kamau")
+		self.assertEqual(res2["meta"]["total_count"], 2)
+
+	def test_get_submissions_pagination(self):
+		dept = self._make_empty_department()
+		req = self._make_scoped_requirement("_test-sub-req-page", dept)
+		for i in range(5):
+			emp = self._make_employee(suffix=f"page-{i}")
+			self._make_submission(req.name, emp, display_name=f"Person {i}")
+
+		from onerc_compliance.api.v1.compliance import get_submissions
+
+		page1 = get_submissions(requirement=req.name, page=1, page_length=2)
+		self.assertEqual(page1["meta"]["total_count"], 5)
+		self.assertEqual(page1["meta"]["page"], 1)
+		self.assertEqual(len(page1["data"]), 2)
+
+		page3 = get_submissions(requirement=req.name, page=3, page_length=2)
+		self.assertEqual(page3["meta"]["total_count"], 5)
+		self.assertEqual(len(page3["data"]), 1)
+
+		# Pages don't overlap.
+		page2 = get_submissions(requirement=req.name, page=2, page_length=2)
+		seen = {s["name"] for s in page1["data"]} | {s["name"] for s in page2["data"]} | {
+			s["name"] for s in page3["data"]
+		}
+		self.assertEqual(len(seen), 5)
+
+	def test_get_dashboard_returns_departments_present(self):
+		dept = self._make_empty_department()
+		req = self._make_scoped_requirement("_test-sub-req-dash-depts", dept)
+		emp_a = self._make_employee(suffix="dash-a")
+		emp_b = self._make_employee(suffix="dash-b")
+		emp_c = self._make_employee(suffix="dash-c")
+		self._make_submission(req.name, emp_a, display_name="A", department="Marketing")
+		self._make_submission(req.name, emp_b, display_name="B", department="Accounts")
+		self._make_submission(req.name, emp_c, display_name="C")  # Unassigned
+
+		from onerc_compliance.api.v1.compliance import get_dashboard
+
+		result = get_dashboard(requirement=req.name)
+		departments = result["data"]["departments"]
+		# Real departments sorted, "Unassigned" appended last.
+		self.assertEqual(departments, ["Accounts", "Marketing", "Unassigned"])
 
 	def test_no_review_blank_mandatory_raises(self):
 		# requires_review=0: submit_requirement sets status straight to Reviewed.
