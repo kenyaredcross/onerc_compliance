@@ -12,10 +12,10 @@
     window.__frappe_user__ = "{{ frappe.session.user | default('Guest') }}";
     window.__frappe_roles__ = {{ frappe_roles_json }};
   </script>
-  <link rel="stylesheet" href="/assets/onerc_compliance/compliance/compliance.css" />
+  <link rel="stylesheet" href="{{ spa_css }}" />
 </head>
 <body class="bg-gray-50">
   <div id="app"></div>
-  <script type="module" src="/assets/onerc_compliance/compliance/compliance.js"></script>
+  <script type="module" src="{{ spa_js }}"></script>
 </body>
 </html>

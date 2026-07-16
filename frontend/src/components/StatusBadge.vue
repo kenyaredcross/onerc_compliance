@@ -19,6 +19,8 @@ const classes = computed(() => {
     case 'Rejected':       return 'bg-red-100 text-red-800'
     case 'Overdue':        return 'bg-rose-100 text-rose-800'
     case 'Exempted':       return 'bg-gray-100 text-gray-600'
+    case 'Draft':          return 'bg-slate-100 text-slate-600'
+    case 'Superseded':     return 'bg-purple-100 text-purple-700'
     default:               return 'bg-gray-100 text-gray-500'
   }
 })

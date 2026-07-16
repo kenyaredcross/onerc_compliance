@@ -32,3 +32,42 @@ def has_submission_permission(doc, user=None, permission_type=None):
 		return False
 
 	return doc.employee == employee
+
+
+SCHEME_OFFICER_ROLES = {"Compliance Officer", "HR Manager", "System Manager"}
+
+
+def _scheme_scoped_query_conditions(doctype, user):
+	if not user:
+		user = frappe.session.user
+
+	if SCHEME_OFFICER_ROLES & set(frappe.get_roles(user)):
+		return ""
+
+	employee = frappe.db.get_value("Employee", {"user_id": user}, "name")
+	if not employee:
+		return "1=0"
+
+	return f"`tab{doctype}`.`employee` = {frappe.db.escape(employee)}"
+
+
+def scheme_form_query_conditions(user=None):
+	return _scheme_scoped_query_conditions("Occupational Scheme Form", user)
+
+
+def beneficiary_nomination_query_conditions(user=None):
+	return _scheme_scoped_query_conditions("Beneficiary Nomination", user)
+
+
+def has_scheme_doc_permission(doc, user=None, permission_type=None):
+	if not user:
+		user = frappe.session.user
+
+	if SCHEME_OFFICER_ROLES & set(frappe.get_roles(user)):
+		return True
+
+	employee = frappe.db.get_value("Employee", {"user_id": user}, "name")
+	if not employee:
+		return False
+
+	return doc.employee == employee

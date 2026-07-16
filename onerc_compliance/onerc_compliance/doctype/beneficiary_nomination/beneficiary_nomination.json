@@ -1,0 +1,297 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "BEN-NOM-.#####",
+	"creation": "2026-07-14 00:00:00.000000",
+	"doctype": "DocType",
+	"engine": "InnoDB",
+	"field_order": [
+		"employee",
+		"employee_name",
+		"employee_number",
+		"employee_user",
+		"column_identity",
+		"department",
+		"designation",
+		"status",
+		"submitted_on",
+		"amends",
+		"section_a",
+		"member_full_name",
+		"scheme_name",
+		"email",
+		"telephone",
+		"column_a",
+		"marital_status",
+		"id_number",
+		"kra_pin",
+		"section_b",
+		"beneficiaries",
+		"guardians",
+		"bc_prefill_used",
+		"bc_prefill_fetched_on",
+		"section_c",
+		"declaration_accepted",
+		"signed_at",
+		"declaration_date",
+		"section_review",
+		"review_actions",
+		"witness_name",
+		"trustee_name",
+		"trustee_user",
+		"date_received_by_trustee"
+	],
+	"fields": [
+		{
+			"fieldname": "employee",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"label": "Employee",
+			"options": "Employee",
+			"reqd": 1
+		},
+		{
+			"fieldname": "employee_name",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Employee Name",
+			"read_only": 1
+		},
+		{
+			"fieldname": "employee_number",
+			"fieldtype": "Data",
+			"label": "Employee Number",
+			"read_only": 1
+		},
+		{
+			"fetch_from": "employee.user_id",
+			"fetch_if_empty": 0,
+			"fieldname": "employee_user",
+			"fieldtype": "Link",
+			"label": "Employee User",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_identity",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "department",
+			"fieldtype": "Link",
+			"label": "Department",
+			"options": "Department"
+		},
+		{
+			"fieldname": "designation",
+			"fieldtype": "Link",
+			"label": "Designation",
+			"options": "Designation"
+		},
+		{
+			"default": "Draft",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"label": "Status",
+			"options": "Draft\nSubmitted\nNeeds More Info\nReviewed\nRejected\nSuperseded"
+		},
+		{
+			"fieldname": "submitted_on",
+			"fieldtype": "Datetime",
+			"label": "Submitted On",
+			"read_only": 1
+		},
+		{
+			"fieldname": "amends",
+			"fieldtype": "Link",
+			"label": "Amends",
+			"options": "Beneficiary Nomination",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_a",
+			"fieldtype": "Section Break",
+			"label": "Section A — Member Details"
+		},
+		{
+			"fieldname": "member_full_name",
+			"fieldtype": "Data",
+			"label": "Member's Full Name"
+		},
+		{
+			"fieldname": "scheme_name",
+			"fieldtype": "Data",
+			"label": "Employer's Scheme Name",
+			"read_only": 1
+		},
+		{
+			"fieldname": "email",
+			"fieldtype": "Data",
+			"label": "Member's Email Address",
+			"options": "Email"
+		},
+		{
+			"fieldname": "telephone",
+			"fieldtype": "Data",
+			"label": "Member's Tel No.",
+			"options": "Phone"
+		},
+		{
+			"fieldname": "column_a",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "marital_status",
+			"fieldtype": "Select",
+			"label": "Marital Status",
+			"options": "\nSingle\nMarried\nDivorced\nWidowed"
+		},
+		{
+			"fieldname": "id_number",
+			"fieldtype": "Data",
+			"label": "Member's ID No."
+		},
+		{
+			"fieldname": "kra_pin",
+			"fieldtype": "Data",
+			"label": "Member's KRA PIN No."
+		},
+		{
+			"fieldname": "section_b",
+			"fieldtype": "Section Break",
+			"label": "Section B — Beneficiary Details"
+		},
+		{
+			"fieldname": "beneficiaries",
+			"fieldtype": "Table",
+			"label": "Beneficiaries",
+			"options": "Scheme Beneficiary"
+		},
+		{
+			"fieldname": "guardians",
+			"fieldtype": "Table",
+			"label": "Guardians (for beneficiaries under 18)",
+			"options": "Scheme Beneficiary Guardian"
+		},
+		{
+			"default": "0",
+			"fieldname": "bc_prefill_used",
+			"fieldtype": "Check",
+			"label": "Prefilled from HR Records",
+			"read_only": 1
+		},
+		{
+			"fieldname": "bc_prefill_fetched_on",
+			"fieldtype": "Datetime",
+			"label": "HR Records Fetched On",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_c",
+			"fieldtype": "Section Break",
+			"label": "Section C — Member's Declaration"
+		},
+		{
+			"default": "0",
+			"fieldname": "declaration_accepted",
+			"fieldtype": "Check",
+			"label": "I hereby declare that all statements shared above are complete and true, agree to the Scheme Rules, and understand this nomination nullifies any previous nomination"
+		},
+		{
+			"fieldname": "signed_at",
+			"fieldtype": "Data",
+			"label": "Signed At (Place)"
+		},
+		{
+			"fieldname": "declaration_date",
+			"fieldtype": "Date",
+			"label": "Declaration Date",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_review",
+			"fieldtype": "Section Break",
+			"label": "Review"
+		},
+		{
+			"fieldname": "review_actions",
+			"fieldtype": "Table",
+			"label": "Review Actions",
+			"options": "Compliance Review Action"
+		},
+		{
+			"fieldname": "witness_name",
+			"fieldtype": "Data",
+			"label": "Witness Name"
+		},
+		{
+			"fieldname": "trustee_name",
+			"fieldtype": "Data",
+			"label": "Name of the Trustee",
+			"read_only": 1
+		},
+		{
+			"fieldname": "trustee_user",
+			"fieldtype": "Link",
+			"label": "Trustee User",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "date_received_by_trustee",
+			"fieldtype": "Date",
+			"label": "Date Received by Trustee",
+			"read_only": 1
+		}
+	],
+	"grid_page_length": 50,
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2026-07-14 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Onerc Compliance",
+	"name": "Beneficiary Nomination",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Compliance Officer",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "HR Manager",
+			"write": 1
+		},
+		{
+			"read": 1,
+			"role": "Employee"
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "System Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"row_format": "Dynamic",
+	"rows_threshold_for_grid_search": 20,
+	"sort_field": "creation",
+	"sort_order": "DESC",
+	"states": []
+}

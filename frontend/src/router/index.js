@@ -19,6 +19,11 @@ const routes = [
         component: () => import('../pages/ComplianceDashboard.vue'),
         meta: { requiresOfficer: true },
       },
+      {
+        path: 'scheme',
+        name: 'SchemeForms',
+        component: () => import('../pages/SchemeForms.vue'),
+      },
     ],
   },
   {

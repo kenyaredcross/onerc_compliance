@@ -1,0 +1,86 @@
+{
+	"actions": [],
+	"creation": "2026-07-14 00:00:00.000000",
+	"doctype": "DocType",
+	"engine": "InnoDB",
+	"field_order": [
+		"scheme_name",
+		"administrator_name",
+		"enrolment_open",
+		"staff_instructions",
+		"section_legal",
+		"nomination_statement",
+		"declaration_text"
+	],
+	"fields": [
+		{
+			"fieldname": "scheme_name",
+			"fieldtype": "Data",
+			"label": "Scheme Name",
+			"reqd": 1
+		},
+		{
+			"default": "Jubilee Life Insurance Limited",
+			"fieldname": "administrator_name",
+			"fieldtype": "Data",
+			"label": "Administrator Name"
+		},
+		{
+			"default": "1",
+			"fieldname": "enrolment_open",
+			"fieldtype": "Check",
+			"label": "Enrolment Open"
+		},
+		{
+			"fieldname": "staff_instructions",
+			"fieldtype": "Text Editor",
+			"label": "Staff Instructions"
+		},
+		{
+			"fieldname": "section_legal",
+			"fieldtype": "Section Break",
+			"label": "Legal Texts"
+		},
+		{
+			"fieldname": "nomination_statement",
+			"fieldtype": "Text Editor",
+			"label": "Nomination Statement"
+		},
+		{
+			"fieldname": "declaration_text",
+			"fieldtype": "Text Editor",
+			"label": "Declaration Text"
+		}
+	],
+	"grid_page_length": 50,
+	"index_web_pages_for_search": 1,
+	"issingle": 1,
+	"links": [],
+	"modified": "2026-07-14 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Onerc Compliance",
+	"name": "Occupational Scheme Settings",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"read": 1,
+			"role": "Compliance Officer",
+			"write": 1
+		},
+		{
+			"read": 1,
+			"role": "HR Manager",
+			"write": 1
+		},
+		{
+			"create": 1,
+			"read": 1,
+			"role": "System Manager",
+			"write": 1
+		}
+	],
+	"row_format": "Dynamic",
+	"sort_field": "creation",
+	"sort_order": "DESC",
+	"states": []
+}

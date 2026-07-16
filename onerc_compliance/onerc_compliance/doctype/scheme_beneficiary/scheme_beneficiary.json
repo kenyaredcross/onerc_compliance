@@ -1,0 +1,114 @@
+{
+	"actions": [],
+	"creation": "2026-07-14 00:00:00.000000",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"full_name",
+		"email",
+		"mobile",
+		"date_of_birth",
+		"id_number",
+		"birth_certificate_no",
+		"relationship",
+		"share_percent",
+		"source",
+		"bc_relative_no",
+		"bc_line_no",
+		"bc_category"
+	],
+	"fields": [
+		{
+			"fieldname": "full_name",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Name",
+			"reqd": 1
+		},
+		{
+			"fieldname": "email",
+			"fieldtype": "Data",
+			"label": "Email",
+			"options": "Email"
+		},
+		{
+			"fieldname": "mobile",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Mobile",
+			"options": "Phone"
+		},
+		{
+			"fieldname": "date_of_birth",
+			"fieldtype": "Date",
+			"in_list_view": 1,
+			"label": "Date of Birth"
+		},
+		{
+			"fieldname": "id_number",
+			"fieldtype": "Data",
+			"label": "ID No."
+		},
+		{
+			"description": "Required when the beneficiary is under 18 years of age.",
+			"fieldname": "birth_certificate_no",
+			"fieldtype": "Data",
+			"label": "Birth Certificate No."
+		},
+		{
+			"fieldname": "relationship",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Relationship to Member",
+			"reqd": 1
+		},
+		{
+			"fieldname": "share_percent",
+			"fieldtype": "Percent",
+			"in_list_view": 1,
+			"label": "% Share",
+			"reqd": 1
+		},
+		{
+			"default": "Manual",
+			"fieldname": "source",
+			"fieldtype": "Select",
+			"label": "Source",
+			"options": "Manual\nBusiness Central",
+			"read_only": 1
+		},
+		{
+			"fieldname": "bc_relative_no",
+			"fieldtype": "Data",
+			"hidden": 1,
+			"label": "BC Relative No"
+		},
+		{
+			"fieldname": "bc_line_no",
+			"fieldtype": "Int",
+			"hidden": 1,
+			"label": "BC Line No"
+		},
+		{
+			"fieldname": "bc_category",
+			"fieldtype": "Data",
+			"hidden": 1,
+			"label": "BC Category"
+		}
+	],
+	"grid_page_length": 50,
+	"index_web_pages_for_search": 0,
+	"istable": 1,
+	"links": [],
+	"modified": "2026-07-14 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Onerc Compliance",
+	"name": "Scheme Beneficiary",
+	"owner": "Administrator",
+	"permissions": [],
+	"row_format": "Dynamic",
+	"sort_field": "creation",
+	"sort_order": "DESC",
+	"states": []
+}

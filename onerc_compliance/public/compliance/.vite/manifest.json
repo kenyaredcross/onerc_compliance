@@ -1,0 +1,117 @@
+{
+  "_compliance-StatusBadge-DNdU5GwW.js": {
+    "file": "compliance-StatusBadge-DNdU5GwW.js",
+    "name": "StatusBadge",
+    "imports": [
+      "index.html"
+    ]
+  },
+  "_compliance-_plugin-vue_export-helper-DlAUqK2U.js": {
+    "file": "compliance-_plugin-vue_export-helper-DlAUqK2U.js",
+    "name": "_plugin-vue_export-helper"
+  },
+  "_compliance-useApi-BBn4Vqwc.js": {
+    "file": "compliance-useApi-BBn4Vqwc.js",
+    "name": "useApi"
+  },
+  "_compliance-useIctUser-BHMKW8la.js": {
+    "file": "compliance-useIctUser-BHMKW8la.js",
+    "name": "useIctUser"
+  },
+  "index.html": {
+    "file": "compliance-CgXfXRy1.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "dynamicImports": [
+      "src/pages/MyCompliance.vue",
+      "src/pages/ComplianceDashboard.vue",
+      "src/pages/SchemeForms.vue",
+      "src/pages/ict/IctPortal.vue",
+      "src/pages/ict/HelpHome.vue",
+      "src/pages/ict/ResourceAccess.vue",
+      "src/pages/ict/SupportCenter.vue"
+    ]
+  },
+  "src/pages/ComplianceDashboard.vue": {
+    "file": "compliance-ComplianceDashboard-DCTDjlkJ.js",
+    "name": "ComplianceDashboard",
+    "src": "src/pages/ComplianceDashboard.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_compliance-useApi-BBn4Vqwc.js",
+      "_compliance-StatusBadge-DNdU5GwW.js"
+    ]
+  },
+  "src/pages/MyCompliance.vue": {
+    "file": "compliance-MyCompliance-DtNneJxW.js",
+    "name": "MyCompliance",
+    "src": "src/pages/MyCompliance.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_compliance-useApi-BBn4Vqwc.js",
+      "_compliance-StatusBadge-DNdU5GwW.js"
+    ]
+  },
+  "src/pages/SchemeForms.vue": {
+    "file": "compliance-SchemeForms-BK5_X_bI.js",
+    "name": "SchemeForms",
+    "src": "src/pages/SchemeForms.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_compliance-useApi-BBn4Vqwc.js",
+      "_compliance-StatusBadge-DNdU5GwW.js",
+      "_compliance-_plugin-vue_export-helper-DlAUqK2U.js"
+    ]
+  },
+  "src/pages/ict/HelpHome.vue": {
+    "file": "compliance-HelpHome-DLvl7zmG.js",
+    "name": "HelpHome",
+    "src": "src/pages/ict/HelpHome.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_compliance-useIctUser-BHMKW8la.js",
+      "_compliance-_plugin-vue_export-helper-DlAUqK2U.js",
+      "index.html"
+    ]
+  },
+  "src/pages/ict/IctPortal.vue": {
+    "file": "compliance-IctPortal-CbIcx9Dp.js",
+    "name": "IctPortal",
+    "src": "src/pages/ict/IctPortal.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_compliance-useIctUser-BHMKW8la.js"
+    ]
+  },
+  "src/pages/ict/ResourceAccess.vue": {
+    "file": "compliance-ResourceAccess-Dac2nU-0.js",
+    "name": "ResourceAccess",
+    "src": "src/pages/ict/ResourceAccess.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_compliance-useApi-BBn4Vqwc.js",
+      "_compliance-_plugin-vue_export-helper-DlAUqK2U.js"
+    ]
+  },
+  "src/pages/ict/SupportCenter.vue": {
+    "file": "compliance-SupportCenter-DqOcxemp.js",
+    "name": "SupportCenter",
+    "src": "src/pages/ict/SupportCenter.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_compliance-useApi-BBn4Vqwc.js",
+      "_compliance-_plugin-vue_export-helper-DlAUqK2U.js"
+    ]
+  },
+  "style.css": {
+    "file": "compliance-DmLjtJfz.css",
+    "src": "style.css"
+  }
+}

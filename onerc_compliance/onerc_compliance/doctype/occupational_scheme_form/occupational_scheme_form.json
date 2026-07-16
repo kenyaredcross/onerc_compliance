@@ -1,0 +1,434 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "OSF-.#####",
+	"creation": "2026-07-14 00:00:00.000000",
+	"doctype": "DocType",
+	"engine": "InnoDB",
+	"field_order": [
+		"employee",
+		"employee_name",
+		"employee_number",
+		"employee_user",
+		"column_identity",
+		"department",
+		"designation",
+		"status",
+		"submitted_on",
+		"amends",
+		"section_a",
+		"scheme_name",
+		"member_full_name",
+		"occupation",
+		"date_of_birth",
+		"member_number",
+		"date_of_admission",
+		"column_a",
+		"date_of_appointment",
+		"mobile_number",
+		"email",
+		"kra_pin",
+		"id_number",
+		"details_confirmed",
+		"section_avc",
+		"avc_amount",
+		"avc_percent",
+		"section_b",
+		"bank_account_name",
+		"bank_name",
+		"bank_branch",
+		"bank_account_number",
+		"column_b",
+		"bank_town_city",
+		"bank_code",
+		"branch_code",
+		"swift_code",
+		"sort_or_iban_code",
+		"section_c",
+		"beneficiaries",
+		"guardians",
+		"bc_prefill_used",
+		"bc_prefill_fetched_on",
+		"section_d",
+		"declaration_accepted",
+		"declaration_date",
+		"section_review",
+		"review_actions",
+		"documents_checked",
+		"trustee_1_name",
+		"trustee_1_user",
+		"trustee_1_certified_on",
+		"column_review",
+		"trustee_2_name",
+		"trustee_2_user",
+		"trustee_2_certified_on"
+	],
+	"fields": [
+		{
+			"fieldname": "employee",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"label": "Employee",
+			"options": "Employee",
+			"reqd": 1
+		},
+		{
+			"fieldname": "employee_name",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Employee Name",
+			"read_only": 1
+		},
+		{
+			"fieldname": "employee_number",
+			"fieldtype": "Data",
+			"label": "Employee Number",
+			"read_only": 1
+		},
+		{
+			"fetch_from": "employee.user_id",
+			"fetch_if_empty": 0,
+			"fieldname": "employee_user",
+			"fieldtype": "Link",
+			"label": "Employee User",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_identity",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "department",
+			"fieldtype": "Link",
+			"label": "Department",
+			"options": "Department"
+		},
+		{
+			"fieldname": "designation",
+			"fieldtype": "Link",
+			"label": "Designation",
+			"options": "Designation"
+		},
+		{
+			"default": "Draft",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"label": "Status",
+			"options": "Draft\nSubmitted\nNeeds More Info\nReviewed\nRejected\nSuperseded"
+		},
+		{
+			"fieldname": "submitted_on",
+			"fieldtype": "Datetime",
+			"label": "Submitted On",
+			"read_only": 1
+		},
+		{
+			"fieldname": "amends",
+			"fieldtype": "Link",
+			"label": "Amends",
+			"options": "Occupational Scheme Form",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_a",
+			"fieldtype": "Section Break",
+			"label": "Section A — Employment Details"
+		},
+		{
+			"fieldname": "scheme_name",
+			"fieldtype": "Data",
+			"label": "Scheme Name",
+			"read_only": 1
+		},
+		{
+			"fieldname": "member_full_name",
+			"fieldtype": "Data",
+			"label": "Member's Full Name"
+		},
+		{
+			"fieldname": "occupation",
+			"fieldtype": "Data",
+			"label": "Occupation"
+		},
+		{
+			"fieldname": "date_of_birth",
+			"fieldtype": "Date",
+			"label": "Date of Birth"
+		},
+		{
+			"fieldname": "member_number",
+			"fieldtype": "Data",
+			"label": "Member Number"
+		},
+		{
+			"fieldname": "date_of_admission",
+			"fieldtype": "Date",
+			"label": "Date of Admission to the Scheme"
+		},
+		{
+			"fieldname": "column_a",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "date_of_appointment",
+			"fieldtype": "Date",
+			"label": "Date of Appointment"
+		},
+		{
+			"fieldname": "mobile_number",
+			"fieldtype": "Data",
+			"label": "Mobile Number",
+			"options": "Phone"
+		},
+		{
+			"fieldname": "email",
+			"fieldtype": "Data",
+			"label": "Email",
+			"options": "Email"
+		},
+		{
+			"fieldname": "kra_pin",
+			"fieldtype": "Data",
+			"label": "KRA PIN No."
+		},
+		{
+			"fieldname": "id_number",
+			"fieldtype": "Data",
+			"label": "ID No."
+		},
+		{
+			"default": "0",
+			"fieldname": "details_confirmed",
+			"fieldtype": "Check",
+			"label": "I confirm the employment details above are correct"
+		},
+		{
+			"collapsible": 1,
+			"description": "Deduction from salary paid to the scheme administrator over and above normal monthly contributions. Fill either an amount or a percentage, not both.",
+			"fieldname": "section_avc",
+			"fieldtype": "Section Break",
+			"label": "Additional Voluntary Contributions"
+		},
+		{
+			"fieldname": "avc_amount",
+			"fieldtype": "Currency",
+			"label": "AVC Amount (Kshs per month)"
+		},
+		{
+			"fieldname": "avc_percent",
+			"fieldtype": "Percent",
+			"label": "AVC Percent (% per month)"
+		},
+		{
+			"fieldname": "section_b",
+			"fieldtype": "Section Break",
+			"label": "Section B — Bank Details"
+		},
+		{
+			"fieldname": "bank_account_name",
+			"fieldtype": "Data",
+			"label": "Account Name"
+		},
+		{
+			"fieldname": "bank_name",
+			"fieldtype": "Data",
+			"label": "Bank"
+		},
+		{
+			"fieldname": "bank_branch",
+			"fieldtype": "Data",
+			"label": "Bank Branch"
+		},
+		{
+			"fieldname": "bank_account_number",
+			"fieldtype": "Data",
+			"label": "Account Number"
+		},
+		{
+			"fieldname": "column_b",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "bank_town_city",
+			"fieldtype": "Data",
+			"label": "Town/City"
+		},
+		{
+			"fieldname": "bank_code",
+			"fieldtype": "Data",
+			"label": "Bank Code"
+		},
+		{
+			"fieldname": "branch_code",
+			"fieldtype": "Data",
+			"label": "Branch Code"
+		},
+		{
+			"fieldname": "swift_code",
+			"fieldtype": "Data",
+			"label": "SWIFT Code"
+		},
+		{
+			"fieldname": "sort_or_iban_code",
+			"fieldtype": "Data",
+			"label": "SORT Code/IBAN Code"
+		},
+		{
+			"fieldname": "section_c",
+			"fieldtype": "Section Break",
+			"label": "Section C — Beneficiary Nomination"
+		},
+		{
+			"fieldname": "beneficiaries",
+			"fieldtype": "Table",
+			"label": "Beneficiaries",
+			"options": "Scheme Beneficiary"
+		},
+		{
+			"fieldname": "guardians",
+			"fieldtype": "Table",
+			"label": "Guardians (for beneficiaries under 18)",
+			"options": "Scheme Beneficiary Guardian"
+		},
+		{
+			"default": "0",
+			"fieldname": "bc_prefill_used",
+			"fieldtype": "Check",
+			"label": "Prefilled from HR Records",
+			"read_only": 1
+		},
+		{
+			"fieldname": "bc_prefill_fetched_on",
+			"fieldtype": "Datetime",
+			"label": "HR Records Fetched On",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_d",
+			"fieldtype": "Section Break",
+			"label": "Section D — Declaration"
+		},
+		{
+			"default": "0",
+			"fieldname": "declaration_accepted",
+			"fieldtype": "Check",
+			"label": "I hereby declare that all statements and answers above are complete and true, and I agree to the Scheme Rules"
+		},
+		{
+			"fieldname": "declaration_date",
+			"fieldtype": "Date",
+			"label": "Declaration Date",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_review",
+			"fieldtype": "Section Break",
+			"label": "Review & Trustee Certification"
+		},
+		{
+			"fieldname": "review_actions",
+			"fieldtype": "Table",
+			"label": "Review Actions",
+			"options": "Compliance Review Action"
+		},
+		{
+			"fieldname": "documents_checked",
+			"fieldtype": "Select",
+			"label": "Documents Checked",
+			"options": "\nBirth Certificate\nPassport\nID Card"
+		},
+		{
+			"fieldname": "trustee_1_name",
+			"fieldtype": "Data",
+			"label": "Trustee 1 Name",
+			"read_only": 1
+		},
+		{
+			"fieldname": "trustee_1_user",
+			"fieldtype": "Link",
+			"label": "Trustee 1 User",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "trustee_1_certified_on",
+			"fieldtype": "Datetime",
+			"label": "Trustee 1 Certified On",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_review",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "trustee_2_name",
+			"fieldtype": "Data",
+			"label": "Trustee 2 Name",
+			"read_only": 1
+		},
+		{
+			"fieldname": "trustee_2_user",
+			"fieldtype": "Link",
+			"label": "Trustee 2 User",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "trustee_2_certified_on",
+			"fieldtype": "Datetime",
+			"label": "Trustee 2 Certified On",
+			"read_only": 1
+		}
+	],
+	"grid_page_length": 50,
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2026-07-14 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Onerc Compliance",
+	"name": "Occupational Scheme Form",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Compliance Officer",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "HR Manager",
+			"write": 1
+		},
+		{
+			"read": 1,
+			"role": "Employee"
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "System Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"row_format": "Dynamic",
+	"rows_threshold_for_grid_search": 20,
+	"sort_field": "creation",
+	"sort_order": "DESC",
+	"states": []
+}

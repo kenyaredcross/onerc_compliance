@@ -26,10 +26,14 @@ scheduler_events = {
 
 permission_query_conditions = {
 	"Compliance Submission": "onerc_compliance.permissions.submission_query_conditions",
+	"Occupational Scheme Form": "onerc_compliance.permissions.scheme_form_query_conditions",
+	"Beneficiary Nomination": "onerc_compliance.permissions.beneficiary_nomination_query_conditions",
 }
 
 has_permission = {
 	"Compliance Submission": "onerc_compliance.permissions.has_submission_permission",
+	"Occupational Scheme Form": "onerc_compliance.permissions.has_scheme_doc_permission",
+	"Beneficiary Nomination": "onerc_compliance.permissions.has_scheme_doc_permission",
 }
 
 doc_events = {

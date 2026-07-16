@@ -1,0 +1,71 @@
+{
+	"actions": [],
+	"creation": "2026-07-14 00:00:00.000000",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"guardian_name",
+		"email",
+		"mobile",
+		"id_number",
+		"beneficiary_name",
+		"relationship_to_beneficiary"
+	],
+	"fields": [
+		{
+			"fieldname": "guardian_name",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Name",
+			"reqd": 1
+		},
+		{
+			"fieldname": "email",
+			"fieldtype": "Data",
+			"label": "Email",
+			"options": "Email"
+		},
+		{
+			"fieldname": "mobile",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Mobile",
+			"options": "Phone"
+		},
+		{
+			"fieldname": "id_number",
+			"fieldtype": "Data",
+			"label": "ID No."
+		},
+		{
+			"description": "Must match the name of a beneficiary row.",
+			"fieldname": "beneficiary_name",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Beneficiary",
+			"reqd": 1
+		},
+		{
+			"fieldname": "relationship_to_beneficiary",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Relationship to Beneficiary",
+			"reqd": 1
+		}
+	],
+	"grid_page_length": 50,
+	"index_web_pages_for_search": 0,
+	"istable": 1,
+	"links": [],
+	"modified": "2026-07-14 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Onerc Compliance",
+	"name": "Scheme Beneficiary Guardian",
+	"owner": "Administrator",
+	"permissions": [],
+	"row_format": "Dynamic",
+	"sort_field": "creation",
+	"sort_order": "DESC",
+	"states": []
+}

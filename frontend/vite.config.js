@@ -14,14 +14,14 @@ export default defineConfig({
     outDir: '../onerc_compliance/public/compliance',
     emptyOutDir: true,
     cssCodeSplit: false,
+    // Hashed filenames bust browser caches on every deploy; the www pages
+    // resolve the real names at request time from this manifest.
+    manifest: true,
     rollupOptions: {
       output: {
-        entryFileNames: 'compliance.js',
-        chunkFileNames: 'compliance-[name].js',
-        assetFileNames: (info) => {
-          if (info.name?.endsWith('.css')) return 'compliance.css'
-          return '[name][extname]'
-        },
+        entryFileNames: 'compliance-[hash].js',
+        chunkFileNames: 'compliance-[name]-[hash].js',
+        assetFileNames: 'compliance-[hash][extname]',
       },
     },
   },
