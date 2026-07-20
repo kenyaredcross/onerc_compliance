@@ -67,15 +67,7 @@
             <div class="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-800 mb-3">
               Details below are prefilled from your HR record — please confirm they are correct and complete the rest.
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="label">Scheme Name</label>
-                <input type="text" class="input-field bg-gray-50" :value="settings.scheme_name" disabled />
-              </div>
-              <div>
-                <label class="label">Member's Full Name <span class="required-asterisk">*</span></label>
-                <input type="text" class="input-field" v-model="scheme.member_full_name" :disabled="!schemeEditable" />
-              </div>
+            <MemberBasicInfo :model-value="scheme" :scheme-name="settings.scheme_name" :editable="schemeEditable">
               <div>
                 <label class="label">Occupation</label>
                 <input type="text" class="input-field" v-model="scheme.occupation" :disabled="!schemeEditable" />
@@ -96,23 +88,7 @@
                 <label class="label">Date of Appointment</label>
                 <input type="date" class="input-field" v-model="scheme.date_of_appointment" :disabled="!schemeEditable" />
               </div>
-              <div>
-                <label class="label">Mobile Number</label>
-                <input type="text" class="input-field" v-model="scheme.mobile_number" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">Email</label>
-                <input type="email" class="input-field" v-model="scheme.email" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">KRA PIN No.</label>
-                <input type="text" class="input-field" v-model="scheme.kra_pin" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">ID No. <span class="required-asterisk">*</span></label>
-                <input type="text" class="input-field" v-model="scheme.id_number" :disabled="!schemeEditable" />
-              </div>
-            </div>
+            </MemberBasicInfo>
             <label class="flex items-start gap-2 mt-3 text-sm text-gray-700 cursor-pointer">
               <input type="checkbox" class="mt-0.5" v-model="scheme.details_confirmed" :disabled="!schemeEditable" />
               I confirm the employment details above are correct.
@@ -231,23 +207,7 @@
             <div class="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-800 mb-3">
               Details below are prefilled from your HR record — please confirm they are correct.
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="label">Member's Full Name <span class="required-asterisk">*</span></label>
-                <input type="text" class="input-field" v-model="nomination.member_full_name" :disabled="!nominationEditable" />
-              </div>
-              <div>
-                <label class="label">Employer's Scheme Name</label>
-                <input type="text" class="input-field bg-gray-50" :value="settings.scheme_name" disabled />
-              </div>
-              <div>
-                <label class="label">Member's Email Address</label>
-                <input type="email" class="input-field" v-model="nomination.email" :disabled="!nominationEditable" />
-              </div>
-              <div>
-                <label class="label">Member's Tel No.</label>
-                <input type="text" class="input-field" v-model="nomination.telephone" :disabled="!nominationEditable" />
-              </div>
+            <MemberBasicInfo :model-value="nomination" :scheme-name="settings.scheme_name" :editable="nominationEditable">
               <div>
                 <label class="label">Marital Status</label>
                 <select class="input-field" v-model="nomination.marital_status" :disabled="!nominationEditable">
@@ -255,15 +215,7 @@
                   <option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option>
                 </select>
               </div>
-              <div>
-                <label class="label">Member's ID No. <span class="required-asterisk">*</span></label>
-                <input type="text" class="input-field" v-model="nomination.id_number" :disabled="!nominationEditable" />
-              </div>
-              <div>
-                <label class="label">Member's KRA PIN No.</label>
-                <input type="text" class="input-field" v-model="nomination.kra_pin" :disabled="!nominationEditable" />
-              </div>
-            </div>
+            </MemberBasicInfo>
           </div>
 
           <!-- Section B -->
@@ -331,6 +283,7 @@ import { useApi } from '../composables/useApi.js'
 import { useToast } from '../composables/useToast.js'
 import StatusBadge from '../components/StatusBadge.vue'
 import BeneficiaryTable from '../components/BeneficiaryTable.vue'
+import MemberBasicInfo from '../components/MemberBasicInfo.vue'
 
 const api = useApi()
 const toast = useToast()
