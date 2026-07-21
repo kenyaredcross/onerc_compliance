@@ -161,7 +161,7 @@ const IconShield = {
 
 const allNav = [
   { to: '/compliance',           label: 'My Compliance',     icon: IconList,     officer: false },
-  { to: '/compliance/scheme',    label: 'Pension Compliance', icon: IconShield,   officer: false },
+  // { to: '/compliance/scheme',    label: 'Pension Compliance', icon: IconShield,   officer: false },
   { to: '/compliance/dashboard', label: 'Dashboard',         icon: IconBarChart, officer: true  },
 ]
 
