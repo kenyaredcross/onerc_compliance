@@ -22,256 +22,193 @@
     </div>
 
     <template v-else>
-      <!-- Staff instructions -->
+      <!-- Notices -->
       <div
         v-if="settings.staff_instructions"
         class="card p-4 mb-4 text-sm text-gray-700 prose prose-sm max-w-none"
         v-html="settings.staff_instructions"
       />
-
-      <!-- Enrolment closed -->
       <div v-if="!settings.enrolment_open" class="card p-4 mb-4 border-l-4 border-amber-400 text-sm text-amber-800 bg-amber-50">
         Enrolment is currently closed. You can view your forms but cannot submit changes.
       </div>
-
-      <!-- BC unavailable notice -->
       <div v-if="bc.status === 'unavailable'" class="card p-4 mb-4 border-l-4 border-amber-400 text-sm text-amber-800 bg-amber-50">
         {{ bc.error || 'HR records are unreachable right now; you can still fill the forms manually.' }}
       </div>
 
-      <!-- Tabs -->
-      <div class="flex gap-1 mb-4 border-b border-gray-200">
-        <button
-          v-for="tab in tabs"
-          :key="tab.key"
-          type="button"
-          class="px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors -mb-px border"
-          :class="activeTab === tab.key
-            ? 'bg-white border-gray-200 border-b-white text-navy'
-            : 'bg-transparent border-transparent text-gray-500 hover:text-navy'"
-          @click="activeTab = tab.key"
-        >
-          {{ tab.label }}
-          <StatusBadge v-if="formStatus(tab.key)" :status="formStatus(tab.key)" class="ml-1.5" />
-        </button>
-      </div>
+      <!-- Form state banners -->
+      <FormStateBanner :form="forms.scheme"     label="Occupational Scheme Form"  @start-new="startNew('scheme')"     class="mb-3" />
+      <FormStateBanner :form="forms.nomination" label="Beneficiary Nomination"     @start-new="startNew('nomination')" class="mb-4" />
 
-      <!-- ============ OCCUPATIONAL SCHEME FORM ============ -->
-      <div v-show="activeTab === 'scheme'" class="space-y-4">
-        <FormStateBanner :form="forms.scheme" @start-new="startNew('scheme')" />
+      <div class="space-y-6">
 
+        <!-- ═══ PART 1: EMPLOYMENT DETAILS ═══ -->
         <div class="card p-5 space-y-5">
-          <!-- Section A -->
-          <div>
-            <h3 class="section-title">Section A — Employment Details</h3>
-            <div class="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-800 mb-3">
-              Details below are prefilled from your HR record — please confirm they are correct and complete the rest.
+          <h3 class="section-title !border-b-2 !border-navy/20 text-base">Part 1 — Employment Details</h3>
+
+          <div class="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-800">
+            Details below are prefilled from your HR record — please confirm they are correct and complete the rest.
+          </div>
+
+          <MemberBasicInfo :model-value="scheme" :scheme-name="settings.scheme_name" :editable="schemeEditable">
+            <div>
+              <label class="label">Occupation</label>
+              <input type="text" class="input-field" v-model="scheme.occupation" :disabled="!schemeEditable" />
             </div>
-            <MemberBasicInfo :model-value="scheme" :scheme-name="settings.scheme_name" :editable="schemeEditable">
-              <div>
-                <label class="label">Occupation</label>
-                <input type="text" class="input-field" v-model="scheme.occupation" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">Date of Birth <span class="required-asterisk">*</span></label>
-                <input type="date" class="input-field" v-model="scheme.date_of_birth" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">Member Number <span class="required-asterisk">*</span></label>
-                <input type="text" class="input-field" v-model="scheme.member_number" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">Date of Admission to the Scheme</label>
-                <input type="date" class="input-field" v-model="scheme.date_of_admission" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">Date of Appointment</label>
-                <input type="date" class="input-field" v-model="scheme.date_of_appointment" :disabled="!schemeEditable" />
-              </div>
-            </MemberBasicInfo>
-            <label class="flex items-start gap-2 mt-3 text-sm text-gray-700 cursor-pointer">
-              <input type="checkbox" class="mt-0.5" v-model="scheme.details_confirmed" :disabled="!schemeEditable" />
-              I confirm the employment details above are correct.
-            </label>
-          </div>
-
-          <!-- AVC -->
-          <div>
-            <h3 class="section-title">Additional Voluntary Contributions <span class="text-gray-400 font-normal text-xs">(optional)</span></h3>
-            <p class="text-xs text-gray-500 mb-3">
-              Deduction from your salary paid to {{ settings.administrator_name || 'the scheme administrator' }} over and above
-              your normal monthly contributions. Fill either an amount <em>or</em> a percentage, not both.
-            </p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="label">Amount (Kshs per month)</label>
-                <input type="number" min="0" step="0.01" class="input-field" v-model.number="scheme.avc_amount" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">Percent (% per month)</label>
-                <input type="number" min="0" max="100" step="0.01" class="input-field" v-model.number="scheme.avc_percent" :disabled="!schemeEditable" />
-              </div>
+            <div>
+              <label class="label">Date of Birth <span class="required-asterisk">*</span></label>
+              <input type="date" class="input-field" v-model="scheme.date_of_birth" :disabled="!schemeEditable" />
             </div>
-            <p v-if="scheme.avc_amount && scheme.avc_percent" class="text-xs text-error mt-1">
-              Fill either an amount or a percentage — not both.
-            </p>
-          </div>
-
-          <!-- Section B -->
-          <div>
-            <h3 class="section-title">Section B — Bank Details</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="label">Account Name <span class="required-asterisk">*</span></label>
-                <input type="text" class="input-field" v-model="scheme.bank_account_name" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">Bank <span class="required-asterisk">*</span></label>
-                <input type="text" class="input-field" v-model="scheme.bank_name" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">Bank Branch</label>
-                <input type="text" class="input-field" v-model="scheme.bank_branch" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">Account Number <span class="required-asterisk">*</span></label>
-                <input type="text" class="input-field" v-model="scheme.bank_account_number" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">Town/City</label>
-                <input type="text" class="input-field" v-model="scheme.bank_town_city" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">Bank Code</label>
-                <input type="text" class="input-field" v-model="scheme.bank_code" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">Branch Code</label>
-                <input type="text" class="input-field" v-model="scheme.branch_code" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">SWIFT Code</label>
-                <input type="text" class="input-field" v-model="scheme.swift_code" :disabled="!schemeEditable" />
-              </div>
-              <div>
-                <label class="label">SORT Code/IBAN Code</label>
-                <input type="text" class="input-field" v-model="scheme.sort_or_iban_code" :disabled="!schemeEditable" />
-              </div>
+            <div>
+              <label class="label">Member Number <span class="required-asterisk">*</span></label>
+              <input type="text" class="input-field" v-model="scheme.member_number" :disabled="!schemeEditable" />
             </div>
-          </div>
+            <div>
+              <label class="label">Date of Admission to the Scheme</label>
+              <input type="date" class="input-field" v-model="scheme.date_of_admission" :disabled="!schemeEditable" />
+            </div>
+            <div>
+              <label class="label">Date of Appointment</label>
+              <input type="date" class="input-field" v-model="scheme.date_of_appointment" :disabled="!schemeEditable" />
+            </div>
+            <div>
+              <label class="label">Marital Status</label>
+              <select class="input-field" v-model="nomination.marital_status" :disabled="!nominationEditable">
+                <option value="">Select…</option>
+                <option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option>
+              </select>
+            </div>
+          </MemberBasicInfo>
 
-          <!-- Beneficiaries are nominated in the Beneficiary Nomination form -->
-          <div class="rounded-lg bg-blue-50 border border-blue-200 p-3 text-xs text-blue-800">
-            Beneficiary nomination is done under the
-            <button type="button" class="font-semibold underline" @click="activeTab = 'nomination'">Beneficiary Nomination</button>
-            tab.
-          </div>
+          <label class="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+            <input type="checkbox" class="mt-0.5" v-model="scheme.details_confirmed" :disabled="!schemeEditable" />
+            I confirm the employment details above are correct.
+          </label>
+        </div>
 
-          <!-- Declaration -->
-          <div>
-            <h3 class="section-title">Declaration</h3>
-            <p v-if="settings.declaration_text" class="text-xs text-gray-600 italic mb-2" v-html="settings.declaration_text" />
-            <label class="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
-              <input type="checkbox" class="mt-0.5" v-model="scheme.declaration_accepted" :disabled="!schemeEditable" />
-              I hereby declare that all statements and answers above are complete and true, and I agree to the Scheme Rules.
-              <span class="required-asterisk">*</span>
-            </label>
-          </div>
-
-          <!-- Actions -->
-          <div v-if="schemeEditable" class="flex items-center gap-3 pt-2 border-t border-gray-100">
-            <button type="button" class="btn-secondary" :disabled="saving" @click="save('scheme', false)">
-              Save Draft
-            </button>
-            <button
-              type="button"
-              class="btn-primary"
-              :disabled="saving || !scheme.declaration_accepted || !settings.enrolment_open"
-              @click="save('scheme', true)"
-            >
-              Submit
-            </button>
-            <span v-if="saving" class="text-xs text-gray-400">Saving…</span>
+        <!-- ═══ PART 2: BANK DETAILS ═══ -->
+        <div class="card p-5 space-y-4">
+          <h3 class="section-title !border-b-2 !border-navy/20 text-base">Part 2 — Bank Details</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="label">Account Name <span class="required-asterisk">*</span></label>
+              <input type="text" class="input-field" v-model="scheme.bank_account_name" :disabled="!schemeEditable" />
+            </div>
+            <div>
+              <label class="label">Bank <span class="required-asterisk">*</span></label>
+              <input type="text" class="input-field" v-model="scheme.bank_name" :disabled="!schemeEditable" />
+            </div>
+            <div>
+              <label class="label">Bank Branch</label>
+              <input type="text" class="input-field" v-model="scheme.bank_branch" :disabled="!schemeEditable" />
+            </div>
+            <div>
+              <label class="label">Account Number <span class="required-asterisk">*</span></label>
+              <input type="text" class="input-field" v-model="scheme.bank_account_number" :disabled="!schemeEditable" />
+            </div>
+            <div>
+              <label class="label">Town/City</label>
+              <input type="text" class="input-field" v-model="scheme.bank_town_city" :disabled="!schemeEditable" />
+            </div>
+            <div>
+              <label class="label">Bank Code</label>
+              <input type="text" class="input-field" v-model="scheme.bank_code" :disabled="!schemeEditable" />
+            </div>
+            <div>
+              <label class="label">Branch Code</label>
+              <input type="text" class="input-field" v-model="scheme.branch_code" :disabled="!schemeEditable" />
+            </div>
+            <div>
+              <label class="label">SWIFT Code</label>
+              <input type="text" class="input-field" v-model="scheme.swift_code" :disabled="!schemeEditable" />
+            </div>
+            <div>
+              <label class="label">SORT Code/IBAN Code</label>
+              <input type="text" class="input-field" v-model="scheme.sort_or_iban_code" :disabled="!schemeEditable" />
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- ============ BENEFICIARY NOMINATION ============ -->
-      <div v-show="activeTab === 'nomination'" class="space-y-4">
-        <FormStateBanner :form="forms.nomination" @start-new="startNew('nomination')" />
-
-        <div class="card p-5 space-y-5">
-          <!-- Section A -->
-          <div>
-            <h3 class="section-title">Section A — Member Details</h3>
-            <div class="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-800 mb-3">
-              Details below are prefilled from your HR record — please confirm they are correct.
+        <!-- ═══ PART 3: ADDITIONAL VOLUNTARY CONTRIBUTIONS ═══ -->
+        <div class="card p-5 space-y-3">
+          <h3 class="section-title !border-b-2 !border-navy/20 text-base">
+            Part 3 — Additional Voluntary Contributions
+            <span class="text-gray-400 font-normal text-xs ml-1">(optional)</span>
+          </h3>
+          <p class="text-xs text-gray-500">
+            Deduction from your salary paid to {{ settings.administrator_name || 'the scheme administrator' }} over and above
+            your normal monthly contributions. Fill either an amount <em>or</em> a percentage, not both.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="label">Amount (Kshs per month)</label>
+              <input type="number" min="0" step="0.01" class="input-field" v-model.number="scheme.avc_amount" :disabled="!schemeEditable" />
             </div>
-            <MemberBasicInfo :model-value="nomination" :scheme-name="settings.scheme_name" :editable="nominationEditable">
-              <div>
-                <label class="label">Marital Status</label>
-                <select class="input-field" v-model="nomination.marital_status" :disabled="!nominationEditable">
-                  <option value="">Select…</option>
-                  <option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option>
-                </select>
-              </div>
-            </MemberBasicInfo>
-          </div>
-
-          <!-- Section B -->
-          <div>
-            <h3 class="section-title">Section B — Beneficiary Details</h3>
-            <p v-if="settings.nomination_statement" class="text-xs text-gray-600 italic mb-3" v-html="settings.nomination_statement" />
-            <BeneficiaryTable
-              ref="nominationTable"
-              :rows="nomination.beneficiaries"
-              :guardians="nomination.guardians"
-              :editable="nominationEditable"
-              :suggestions="availableSuggestions('nomination')"
-              @add-suggestion="addSuggestion('nomination', $event)"
-            />
-            <p class="text-xs text-gray-500 mt-2">
-              NB: If beneficiaries are under 18 years of age, kindly indicate the Birth Certificate No.
-            </p>
-          </div>
-
-          <!-- Section C -->
-          <div>
-            <h3 class="section-title">Section C — Member's Declaration</h3>
-            <p v-if="settings.declaration_text" class="text-xs text-gray-600 italic mb-2" v-html="settings.declaration_text" />
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
-              <div>
-                <label class="label">Signed At (Place)</label>
-                <input type="text" class="input-field" v-model="nomination.signed_at" :disabled="!nominationEditable" placeholder="e.g. Nairobi" />
-              </div>
+            <div>
+              <label class="label">Percent (% per month)</label>
+              <input type="number" min="0" max="100" step="0.01" class="input-field" v-model.number="scheme.avc_percent" :disabled="!schemeEditable" />
             </div>
-            <label class="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
-              <input type="checkbox" class="mt-0.5" v-model="nomination.declaration_accepted" :disabled="!nominationEditable" />
-              I hereby declare that all statements shared above are complete and true, that they form part of my application
-              for membership, and I agree to the Scheme Rules. I understand this nomination nullifies any previous nomination
-              I completed and submitted to the scheme trustees. <span class="required-asterisk">*</span>
-            </label>
-            <p class="text-xs text-gray-400 mt-2">
-              It is your responsibility to update the Trustees on any changes in the details given above.
-            </p>
           </div>
-
-          <!-- Actions -->
-          <div v-if="nominationEditable" class="flex items-center gap-3 pt-2 border-t border-gray-100">
-            <button type="button" class="btn-secondary" :disabled="saving" @click="save('nomination', false)">
-              Save Draft
-            </button>
-            <button
-              type="button"
-              class="btn-primary"
-              :disabled="saving || !nomination.declaration_accepted || !settings.enrolment_open"
-              @click="save('nomination', true)"
-            >
-              Submit
-            </button>
-            <span v-if="saving" class="text-xs text-gray-400">Saving…</span>
-          </div>
+          <p v-if="scheme.avc_amount && scheme.avc_percent" class="text-xs text-error">
+            Fill either an amount or a percentage — not both.
+          </p>
         </div>
+
+        <!-- ═══ PART 4: BENEFICIARY NOMINATION ═══ -->
+        <div class="card p-5 space-y-4">
+          <h3 class="section-title !border-b-2 !border-navy/20 text-base">Part 4 — Beneficiary Nomination</h3>
+          <p v-if="settings.nomination_statement" class="text-xs text-gray-600 italic" v-html="settings.nomination_statement" />
+          <BeneficiaryTable
+            ref="nominationTable"
+            :rows="nomination.beneficiaries"
+            :guardians="nomination.guardians"
+            :editable="nominationEditable"
+            :suggestions="availableSuggestions()"
+            @add-suggestion="addSuggestion($event)"
+          />
+          <p class="text-xs text-gray-500">
+            NB: If beneficiaries are under 18 years of age, kindly indicate the Birth Certificate No.
+          </p>
+        </div>
+
+        <!-- ═══ PART 5: DECLARATION ═══ -->
+        <div class="card p-5 space-y-4">
+          <h3 class="section-title !border-b-2 !border-navy/20 text-base">Part 5 — Declaration</h3>
+          <p v-if="settings.declaration_text" class="text-xs text-gray-600 italic" v-html="settings.declaration_text" />
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="label">Signed At (Place)</label>
+              <input type="text" class="input-field" v-model="nomination.signed_at" :disabled="!nominationEditable" placeholder="e.g. Nairobi" />
+            </div>
+          </div>
+
+          <label class="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+            <input type="checkbox" class="mt-0.5" v-model="bothDeclared" :disabled="!anyEditable" @change="onBothDeclared" />
+            I hereby declare that all statements and answers above are complete and true, that I agree to the Scheme Rules,
+            and understand this nomination nullifies any previous nomination I submitted to the scheme trustees.
+            <span class="required-asterisk">*</span>
+          </label>
+          <p class="text-xs text-gray-400">
+            It is your responsibility to update the Trustees on any changes in the details given above.
+          </p>
+        </div>
+
+        <!-- ═══ ACTIONS ═══ -->
+        <div v-if="anyEditable" class="card p-4 flex items-center gap-3">
+          <button type="button" class="btn-secondary" :disabled="saving" @click="saveBoth(false)">
+            Save Draft
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            :disabled="saving || !bothDeclared || !settings.enrolment_open"
+            @click="saveBoth(true)"
+          >
+            Submit
+          </button>
+          <span v-if="saving" class="text-xs text-gray-400">Saving…</span>
+        </div>
+
       </div>
     </template>
   </div>
@@ -291,18 +228,19 @@ const toast = useToast()
 const loading = ref(true)
 const loadError = ref('')
 const saving = ref(false)
-const activeTab = ref('scheme')
-
-const tabs = [
-  { key: 'scheme', label: 'Occupational Scheme Details' },
-  { key: 'nomination', label: 'Beneficiary Nomination' },
-]
 
 const settings = ref({})
 const employeePrefill = ref({})
 const forms = ref({ scheme: {}, nomination: {} })
 const bc = ref({ status: 'skipped', error: '', suggestions: [] })
 const startedNew = reactive({ scheme: false, nomination: false })
+
+// Single declaration checkbox that drives both forms
+const bothDeclared = ref(false)
+function onBothDeclared() {
+  scheme.declaration_accepted = bothDeclared.value
+  nomination.declaration_accepted = bothDeclared.value
+}
 
 const emptyScheme = () => ({
   member_full_name: '', occupation: '', date_of_birth: '', member_number: '',
@@ -325,9 +263,23 @@ const emptyNomination = () => ({
 const scheme = reactive(emptyScheme())
 const nomination = reactive(emptyNomination())
 
-// Inline component: banner showing current form state / start-new option
+const schemeEditable = computed(() => {
+  const f = forms.value.scheme
+  if (startedNew.scheme) return true
+  if (!f?.doc) return true
+  return ['Draft', 'Needs More Info'].includes(f.doc.status)
+})
+const nominationEditable = computed(() => {
+  const f = forms.value.nomination
+  if (startedNew.nomination) return true
+  if (!f?.doc) return true
+  return ['Draft', 'Needs More Info'].includes(f.doc.status)
+})
+const anyEditable = computed(() => schemeEditable.value || nominationEditable.value)
+
+// Inline banner component
 const FormStateBanner = {
-  props: ['form'],
+  props: ['form', 'label'],
   emits: ['start-new'],
   setup(props, { emit }) {
     return () => {
@@ -335,10 +287,10 @@ const FormStateBanner = {
       if (!doc) return null
       const status = doc.status
       const messages = {
-        Submitted: 'This form has been submitted and is awaiting review. It can no longer be edited.',
-        Reviewed: 'This form has been reviewed and accepted.',
-        Rejected: 'This form was rejected.',
-        Superseded: 'This form has been superseded by a newer submission.',
+        Submitted: `${props.label} has been submitted and is awaiting review.`,
+        Reviewed: `${props.label} has been reviewed and accepted.`,
+        Rejected: `${props.label} was rejected.`,
+        Superseded: `${props.label} has been superseded by a newer submission.`,
         'Needs More Info': null,
       }
       const children = []
@@ -346,7 +298,7 @@ const FormStateBanner = {
         const remark = (doc.review_actions || []).slice().reverse().find((a) => a.action === 'Needs More Info')
         children.push(
           h('div', { class: 'rounded-lg bg-orange-50 border border-orange-200 p-3 text-sm' }, [
-            h('p', { class: 'font-semibold text-orange-800 mb-1' }, 'Reviewer Note — more information needed'),
+            h('p', { class: 'font-semibold text-orange-800 mb-1' }, `${props.label} — more information needed`),
             h('p', { class: 'text-orange-700' }, remark?.remarks || 'No remark provided.'),
           ])
         )
@@ -364,40 +316,18 @@ const FormStateBanner = {
           ])
         )
       }
-      return children.length ? h('div', { class: 'space-y-2' }, children) : null
+      return children.length ? h('div', {}, children) : null
     }
   },
 }
 
-const schemeEditable = computed(() => {
-  const f = forms.value.scheme
-  if (startedNew.scheme) return true
-  if (!f?.doc) return true
-  return ['Draft', 'Needs More Info'].includes(f.doc.status)
-})
-const nominationEditable = computed(() => {
-  const f = forms.value.nomination
-  if (startedNew.nomination) return true
-  if (!f?.doc) return true
-  return ['Draft', 'Needs More Info'].includes(f.doc.status)
-})
-
-function formStatus(key) {
-  return forms.value[key]?.doc?.status || ''
-}
-
-function targetState(key) {
-  return key === 'scheme' ? scheme : nomination
-}
-
-function availableSuggestions(key) {
-  const state = targetState(key)
-  const used = new Set(state.beneficiaries.map((b) => b.bc_relative_no).filter(Boolean))
+function availableSuggestions() {
+  const used = new Set(nomination.beneficiaries.map((b) => b.bc_relative_no).filter(Boolean))
   return (bc.value.suggestions || []).filter((s) => !s.bc_relative_no || !used.has(s.bc_relative_no))
 }
 
-function addSuggestion(key, s) {
-  targetState(key).beneficiaries.push({
+function addSuggestion(s) {
+  nomination.beneficiaries.push({
     full_name: s.full_name || '',
     email: '',
     mobile: s.mobile || '',
@@ -413,57 +343,68 @@ function addSuggestion(key, s) {
   })
 }
 
-function applyPrefill(key) {
+function applyPrefill() {
   const p = employeePrefill.value
-  if (key === 'scheme') {
-    scheme.member_full_name = p.employee_name || ''
-    scheme.occupation = p.designation || ''
-    scheme.date_of_birth = p.date_of_birth || ''
-    scheme.date_of_appointment = p.date_of_joining || ''
-    scheme.mobile_number = p.cell_number || ''
-    scheme.email = p.email || ''
-  } else {
-    nomination.member_full_name = p.employee_name || ''
-    nomination.email = p.email || ''
-    nomination.telephone = p.cell_number || ''
-  }
+  scheme.member_full_name = p.employee_name || ''
+  scheme.occupation = p.designation || ''
+  scheme.date_of_birth = p.date_of_birth || ''
+  scheme.date_of_appointment = p.date_of_joining || ''
+  scheme.mobile_number = p.cell_number || ''
+  scheme.email = p.email || ''
+  nomination.member_full_name = p.employee_name || ''
+  nomination.email = p.email || ''
+  nomination.telephone = p.cell_number || ''
 }
 
-function prepopulateBeneficiaries(key) {
-  // Beneficiaries live on the Beneficiary Nomination form only.
-  if (key !== 'nomination') return
-  // First time on the form: start the list off with everything HR has on
-  // file. The member can remove rows or add more; once a doc exists (draft
-  // or submitted) we never auto-fill again.
-  const state = targetState(key)
-  if (state.beneficiaries.length) return
-  ;(bc.value.suggestions || []).forEach((s) => addSuggestion(key, s))
+function prepopulateBeneficiaries() {
+  if (nomination.beneficiaries.length) return
+  ;(bc.value.suggestions || []).forEach((s) => addSuggestion(s))
 }
 
-function hydrate(key) {
-  const doc = forms.value[key]?.doc
-  const state = targetState(key)
-  if (!doc) {
-    applyPrefill(key)
-    prepopulateBeneficiaries(key)
-    return
-  }
-  Object.keys(state).forEach((field) => {
+function hydrateScheme() {
+  const doc = forms.value.scheme?.doc
+  if (!doc) { applyPrefill(); return }
+  Object.keys(scheme).forEach((field) => {
     if (field === 'beneficiaries' || field === 'guardians') return
-    if (doc[field] !== undefined && doc[field] !== null) state[field] = doc[field]
+    if (doc[field] !== undefined && doc[field] !== null) scheme[field] = doc[field]
   })
-  state.declaration_accepted = Boolean(doc.declaration_accepted)
-  if (key === 'scheme') state.details_confirmed = Boolean(doc.details_confirmed)
-  state.beneficiaries = (doc.beneficiaries || []).map((b) => ({ ...b }))
-  state.guardians = (doc.guardians || []).map((g) => ({ ...g }))
+  scheme.declaration_accepted = Boolean(doc.declaration_accepted)
+  scheme.details_confirmed = Boolean(doc.details_confirmed)
+}
+
+function hydrateNomination() {
+  const doc = forms.value.nomination?.doc
+  if (!doc) { prepopulateBeneficiaries(); return }
+  Object.keys(nomination).forEach((field) => {
+    if (field === 'beneficiaries' || field === 'guardians') return
+    if (doc[field] !== undefined && doc[field] !== null) nomination[field] = doc[field]
+  })
+  nomination.declaration_accepted = Boolean(doc.declaration_accepted)
+  nomination.beneficiaries = (doc.beneficiaries || []).map((b) => ({ ...b }))
+  nomination.guardians = (doc.guardians || []).map((g) => ({ ...g }))
+  prepopulateBeneficiaries()
+}
+
+function syncSharedFields() {
+  // Keep nomination in sync with scheme for the shared basic fields
+  nomination.member_full_name = scheme.member_full_name
+  nomination.email = scheme.email
+  nomination.telephone = scheme.mobile_number
+  nomination.id_number = scheme.id_number
+  nomination.kra_pin = scheme.kra_pin
 }
 
 function startNew(key) {
   startedNew[key] = true
-  const fresh = key === 'scheme' ? emptyScheme() : emptyNomination()
-  Object.assign(targetState(key), fresh)
-  applyPrefill(key)
-  prepopulateBeneficiaries(key)
+  if (key === 'scheme') {
+    Object.assign(scheme, emptyScheme())
+    applyPrefill()
+  } else {
+    Object.assign(nomination, emptyNomination())
+    applyPrefill()
+    prepopulateBeneficiaries()
+  }
+  bothDeclared.value = false
   toast.info('Started a new form — it will amend your previous one when submitted.')
 }
 
@@ -480,8 +421,9 @@ async function load() {
     employeePrefill.value = res.data.employee_prefill || {}
     forms.value = res.data.forms || { scheme: {}, nomination: {} }
     bc.value = res.data.bc || { status: 'skipped', error: '', suggestions: [] }
-    hydrate('scheme')
-    hydrate('nomination')
+    hydrateScheme()
+    hydrateNomination()
+    bothDeclared.value = Boolean(scheme.declaration_accepted && nomination.declaration_accepted)
   } catch (e) {
     loadError.value = e.message || 'Failed to load your forms.'
   } finally {
@@ -489,42 +431,46 @@ async function load() {
   }
 }
 
-async function save(key, submit) {
-  const state = targetState(key)
+async function saveOne(key, submit) {
+  const state = key === 'scheme' ? scheme : nomination
+  const payload = { ...state, declaration_accepted: state.declaration_accepted ? 1 : 0 }
+  if (key === 'scheme') payload.details_confirmed = state.details_confirmed ? 1 : 0
+  const res = await api.call('onerc_compliance.api.v1.scheme.save_form', {
+    form_type: key,
+    payload,
+    submit: submit ? 1 : 0,
+  })
+  if (res.status !== 'success') throw new Error(res.message || 'Save failed.')
+  startedNew[key] = false
+  return res
+}
 
+async function saveBoth(submit) {
   if (submit) {
-    if (key === 'nomination') {
-      if (!state.beneficiaries.length) {
-        toast.error('Add at least one beneficiary before submitting.')
-        return
-      }
-      if (nominationTable.value && !nominationTable.value.totalOk) {
-        toast.error('Beneficiary % shares must total exactly 100.')
-        return
-      }
-    }
-    if (key === 'scheme' && state.avc_amount && state.avc_percent) {
+    if (scheme.avc_amount && scheme.avc_percent) {
       toast.error('Additional Voluntary Contributions: fill either an amount or a percentage, not both.')
+      return
+    }
+    if (!nomination.beneficiaries.length) {
+      toast.error('Add at least one beneficiary before submitting.')
+      return
+    }
+    if (nominationTable.value && !nominationTable.value.totalOk) {
+      toast.error('Beneficiary % shares must total exactly 100.')
       return
     }
   }
 
+  // Sync shared fields from scheme → nomination before saving
+  syncSharedFields()
+
   saving.value = true
   try {
-    const payload = { ...state, declaration_accepted: state.declaration_accepted ? 1 : 0 }
-    if (key === 'scheme') payload.details_confirmed = state.details_confirmed ? 1 : 0
-
-    const res = await api.call('onerc_compliance.api.v1.scheme.save_form', {
-      form_type: key,
-      payload,
-      submit: submit ? 1 : 0,
-    })
-    if (res.status !== 'success') {
-      toast.error(res.message || 'Save failed.')
-      return
-    }
-    startedNew[key] = false
-    toast.success(submit ? 'Form submitted for review.' : 'Draft saved.')
+    const tasks = []
+    if (schemeEditable.value) tasks.push(saveOne('scheme', submit))
+    if (nominationEditable.value) tasks.push(saveOne('nomination', submit))
+    await Promise.all(tasks)
+    toast.success(submit ? 'Forms submitted for review.' : 'Draft saved.')
     await load()
   } catch (e) {
     toast.error(e.message || 'Save failed.')
@@ -540,6 +486,6 @@ onMounted(load)
 
 <style scoped>
 .section-title {
-  @apply text-sm font-bold text-navy mb-2 pb-1 border-b border-gray-100;
+  @apply text-sm font-bold text-navy mb-3 pb-1 border-b border-gray-100;
 }
 </style>

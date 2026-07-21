@@ -9,6 +9,9 @@ export const useAuthStore = defineStore('auth', () => {
   const isOfficer = computed(() =>
     roles.value.includes('Compliance Officer') || roles.value.includes('System Manager')
   )
+  const isHRManager = computed(() =>
+    roles.value.includes('HR Manager') || roles.value.includes('System Manager')
+  )
 
   async function checkSession() {
     try {
@@ -25,5 +28,5 @@ export const useAuthStore = defineStore('auth', () => {
     window.location.href = `/login?redirect-to=${encodeURIComponent(window.location.pathname)}`
   }
 
-  return { user, roles, isLoggedIn, isOfficer, checkSession, redirectToLogin }
+  return { user, roles, isLoggedIn, isOfficer, isHRManager, checkSession, redirectToLogin }
 })

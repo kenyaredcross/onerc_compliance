@@ -24,6 +24,12 @@ const routes = [
         name: 'SchemeForms',
         component: () => import('../pages/SchemeForms.vue'),
       },
+      {
+        path: 'pension-review',
+        name: 'PensionReview',
+        component: () => import('../pages/PensionReview.vue'),
+        meta: { requiresHRManager: true },
+      },
     ],
   },
   {
@@ -54,6 +60,10 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta.requiresOfficer && !auth.isOfficer) {
+    return { name: 'MyCompliance' }
+  }
+
+  if (to.meta.requiresHRManager && !auth.isHRManager) {
     return { name: 'MyCompliance' }
   }
 })

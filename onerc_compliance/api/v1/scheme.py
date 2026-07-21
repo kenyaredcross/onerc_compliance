@@ -452,7 +452,7 @@ def get_forms(form_type, status=None, search=None, department=None, page=1, page
 		doctype,
 		filters=filters,
 		or_filters=or_filters,
-		fields=["name", "employee_name", "employee_number", "department", "status", "submitted_on"],
+		fields=["name", "employee", "employee_name", "employee_number", "department", "status", "submitted_on"],
 		order_by="employee_name asc, name asc",
 		limit=page_length,
 		offset=(page - 1) * page_length,
@@ -461,6 +461,7 @@ def get_forms(form_type, status=None, search=None, department=None, page=1, page
 	result = [
 		{
 			"name": row.name,
+			"employee": row.employee or "",
 			"employee_name": row.employee_name or "",
 			"employee_number": row.employee_number or "",
 			"department": row.department or "",
