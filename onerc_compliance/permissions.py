@@ -51,12 +51,8 @@ def _scheme_scoped_query_conditions(doctype, user):
 	return f"`tab{doctype}`.`employee` = {frappe.db.escape(employee)}"
 
 
-def scheme_form_query_conditions(user=None):
-	return _scheme_scoped_query_conditions("Occupational Scheme Form", user)
-
-
-def beneficiary_nomination_query_conditions(user=None):
-	return _scheme_scoped_query_conditions("Beneficiary Nomination", user)
+def pension_form_query_conditions(user=None):
+	return _scheme_scoped_query_conditions("Pension Compliance Form", user)
 
 
 def has_scheme_doc_permission(doc, user=None, permission_type=None):

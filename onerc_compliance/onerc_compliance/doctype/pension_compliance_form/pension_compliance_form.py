@@ -20,15 +20,20 @@ from onerc_compliance.scheme_utils import (
 	validate_review_remarks,
 )
 
-DOCTYPE = "Beneficiary Nomination"
+DOCTYPE = "Pension Compliance Form"
 
 SUBMIT_REQUIRED_FIELDS = [
 	("member_full_name", "Member's Full Name"),
-	("id_number", "Member's ID No."),
+	("date_of_birth", "Date of Birth"),
+	("id_number", "ID No."),
+	("personal_email", "Personal Email"),
+	("bank_account_name", "Account Name"),
+	("bank_name", "Bank"),
+	("bank_account_number", "Account Number"),
 ]
 
 
-class BeneficiaryNomination(Document):
+class PensionComplianceForm(Document):
 	def validate(self):
 		capture_prev_status(self, DOCTYPE)
 		enforce_lock(self)
@@ -40,6 +45,10 @@ class BeneficiaryNomination(Document):
 			require_fields(self, SUBMIT_REQUIRED_FIELDS)
 			if not self.declaration_accepted:
 				frappe.throw(_("You must accept the declaration before submitting."))
+			if self.avc_amount and self.avc_percent:
+				frappe.throw(
+					_("Additional Voluntary Contributions: fill either an amount or a percentage, not both.")
+				)
 			validate_beneficiaries(self)
 			validate_guardians(self)
 			apply_submit_timestamps(self)

@@ -1,8 +1,8 @@
 {
 	"actions": [],
 	"allow_rename": 0,
-	"autoname": "OSF-.#####",
-	"creation": "2026-07-14 00:00:00.000000",
+	"autoname": "PCF-.#####",
+	"creation": "2026-07-28 00:00:00.000000",
 	"doctype": "DocType",
 	"engine": "InnoDB",
 	"field_order": [
@@ -21,12 +21,14 @@
 		"member_full_name",
 		"occupation",
 		"date_of_birth",
+		"marital_status",
 		"member_number",
 		"date_of_admission",
 		"column_a",
 		"date_of_appointment",
 		"mobile_number",
 		"email",
+		"personal_email",
 		"kra_pin",
 		"id_number",
 		"details_confirmed",
@@ -51,10 +53,13 @@
 		"bc_prefill_fetched_on",
 		"section_d",
 		"declaration_accepted",
+		"signed_at",
 		"declaration_date",
 		"section_review",
 		"review_actions",
+		"witness_name",
 		"documents_checked",
+		"date_received_by_trustee",
 		"trustee_1_name",
 		"trustee_1_user",
 		"trustee_1_certified_on",
@@ -128,13 +133,13 @@
 			"fieldname": "amends",
 			"fieldtype": "Link",
 			"label": "Amends",
-			"options": "Occupational Scheme Form",
+			"options": "Pension Compliance Form",
 			"read_only": 1
 		},
 		{
 			"fieldname": "section_a",
 			"fieldtype": "Section Break",
-			"label": "Section A — Employment Details"
+			"label": "Section A — Member & Employment Details"
 		},
 		{
 			"fieldname": "scheme_name",
@@ -156,6 +161,12 @@
 			"fieldname": "date_of_birth",
 			"fieldtype": "Date",
 			"label": "Date of Birth"
+		},
+		{
+			"fieldname": "marital_status",
+			"fieldtype": "Select",
+			"label": "Marital Status",
+			"options": "\nSingle\nMarried\nDivorced\nWidowed"
 		},
 		{
 			"fieldname": "member_number",
@@ -185,7 +196,13 @@
 		{
 			"fieldname": "email",
 			"fieldtype": "Data",
-			"label": "Email",
+			"label": "Work Email",
+			"options": "Email"
+		},
+		{
+			"fieldname": "personal_email",
+			"fieldtype": "Data",
+			"label": "Personal Email",
 			"options": "Email"
 		},
 		{
@@ -202,7 +219,7 @@
 			"default": "0",
 			"fieldname": "details_confirmed",
 			"fieldtype": "Check",
-			"label": "I confirm the employment details above are correct"
+			"label": "I confirm the member details above are correct"
 		},
 		{
 			"collapsible": 1,
@@ -308,13 +325,18 @@
 		{
 			"fieldname": "section_d",
 			"fieldtype": "Section Break",
-			"label": "Section D — Declaration"
+			"label": "Section D — Member's Declaration"
 		},
 		{
 			"default": "0",
 			"fieldname": "declaration_accepted",
 			"fieldtype": "Check",
-			"label": "I hereby declare that all statements and answers above are complete and true, and I agree to the Scheme Rules"
+			"label": "I hereby declare that all statements above are complete and true, agree to the Scheme Rules, and understand this nomination nullifies any previous nomination"
+		},
+		{
+			"fieldname": "signed_at",
+			"fieldtype": "Data",
+			"label": "Signed At (Place)"
 		},
 		{
 			"fieldname": "declaration_date",
@@ -334,10 +356,21 @@
 			"options": "Compliance Review Action"
 		},
 		{
+			"fieldname": "witness_name",
+			"fieldtype": "Data",
+			"label": "Witness Name"
+		},
+		{
 			"fieldname": "documents_checked",
 			"fieldtype": "Select",
 			"label": "Documents Checked",
 			"options": "\nBirth Certificate\nPassport\nID Card"
+		},
+		{
+			"fieldname": "date_received_by_trustee",
+			"fieldtype": "Date",
+			"label": "Date Received by Trustee",
+			"read_only": 1
 		},
 		{
 			"fieldname": "trustee_1_name",
@@ -385,10 +418,10 @@
 	"grid_page_length": 50,
 	"index_web_pages_for_search": 1,
 	"links": [],
-	"modified": "2026-07-14 00:00:00.000000",
+	"modified": "2026-07-28 00:00:00.000000",
 	"modified_by": "Administrator",
 	"module": "Onerc Compliance",
-	"name": "Occupational Scheme Form",
+	"name": "Pension Compliance Form",
 	"owner": "Administrator",
 	"permissions": [
 		{

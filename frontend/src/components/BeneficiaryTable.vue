@@ -5,7 +5,7 @@
       <p class="label mb-2">Beneficiaries <span class="required-asterisk">*</span></p>
 
       <div v-if="!rows.length" class="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-400">
-        No beneficiaries added yet — select one from your HR records or add manually below.
+        No beneficiaries added yet - select one from your HR records or add manually below.
       </div>
 
       <div v-else class="space-y-3">
@@ -24,7 +24,7 @@
               <span
                 v-if="isMinor(row)"
                 class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700"
-              >Under 18 — guardian & birth certificate required</span>
+              >Under 18 - guardian & birth certificate required</span>
             </div>
             <button v-if="editable" type="button" class="text-xs text-error hover:underline" @click="removeRow(idx)">
               Remove
@@ -95,7 +95,7 @@
         >
           <option value="" disabled>Select beneficiary from HR records…</option>
           <option v-for="(s, i) in suggestions" :key="i" :value="String(i)">
-            {{ s.full_name || '(unnamed)' }}{{ s.relationship ? ' — ' + s.relationship : '' }}{{ s.bc_category ? ' (' + s.bc_category + ')' : '' }}
+            {{ s.full_name || '(unnamed)' }}{{ s.relationship ? ' - ' + s.relationship : '' }}{{ s.bc_category ? ' (' + s.bc_category + ')' : '' }}
           </option>
         </select>
         <span v-if="suggestions.length" class="text-xs text-gray-400">or</span>
@@ -132,7 +132,7 @@
       <p class="label mb-2">Guardians (for beneficiaries under 18)</p>
 
       <div v-if="!guardians.length" class="rounded-lg border border-dashed border-amber-300 bg-amber-50 p-3 text-xs text-amber-700">
-        {{ minors.length }} beneficiar{{ minors.length === 1 ? 'y is' : 'ies are' }} under 18 — use the Guardian field on each under-18 beneficiary to add one.
+        {{ minors.length }} beneficiar{{ minors.length === 1 ? 'y is' : 'ies are' }} under 18 - use the Guardian field on each under-18 beneficiary to add one.
       </div>
 
       <div v-else class="divide-y divide-gray-100 rounded-lg border border-gray-200">
@@ -168,9 +168,9 @@
         <div v-if="guardianCandidates.length" class="mb-4">
           <label class="label">Select an existing person</label>
           <select class="input-field" v-model="selectedCandidate" @change="onSelectCandidate">
-            <option value="">— fill in manually below —</option>
+            <option value="">fill in manually below</option>
             <option v-for="(c, i) in guardianCandidates" :key="i" :value="String(i)">
-              {{ c.full_name }}{{ c.hint ? ' — ' + c.hint : '' }}
+              {{ c.full_name }}{{ c.hint ? ' - ' + c.hint : '' }}
             </option>
           </select>
         </div>
@@ -342,7 +342,7 @@ const guardianDraftValid = computed(() =>
 
 // ---- Row/guardian linkage ----
 // Guardians are linked to a specific beneficiary ROW via a client-side key,
-// not by name — several beneficiaries can share a name (e.g. imported HR
+// not by name - several beneficiaries can share a name (e.g. imported HR
 // rows), and a name match would wrongly attach one guardian to all of them.
 // The keys are stripped server-side; on reload they are re-linked by claiming
 // name matches one-to-one.
@@ -406,7 +406,7 @@ function onSelectCandidate() {
   if (!c) return
 
   // Picking an existing guardian assigns them to this beneficiary
-  // immediately — no form-filling, the modal just closes.
+  // immediately - no form-filling, the modal just closes.
   if (c.isGuardian) {
     const assigned = {
       ...guardianDraft.value,
