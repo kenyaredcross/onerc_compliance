@@ -34,7 +34,7 @@ def has_submission_permission(doc, user=None, permission_type=None):
 	return doc.employee == employee
 
 
-SCHEME_OFFICER_ROLES = {"Compliance Officer", "HR Manager", "System Manager"}
+SCHEME_OFFICER_ROLES = {"Compliance Officer", "HR Manager", "Pension Trustee", "System Manager"}
 
 
 def _scheme_scoped_query_conditions(doctype, user):

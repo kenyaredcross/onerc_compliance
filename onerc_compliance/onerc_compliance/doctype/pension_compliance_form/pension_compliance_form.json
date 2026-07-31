@@ -55,6 +55,9 @@
 		"declaration_accepted",
 		"signed_at",
 		"declaration_date",
+		"section_e",
+		"data_consent",
+		"marketing_consent",
 		"section_review",
 		"review_actions",
 		"witness_name",
@@ -121,7 +124,7 @@
 			"fieldtype": "Select",
 			"in_list_view": 1,
 			"label": "Status",
-			"options": "Draft\nSubmitted\nNeeds More Info\nReviewed\nRejected\nSuperseded"
+			"options": "Draft\nSubmitted\nNeeds More Info\nReviewed\nApproved\nRejected\nSuperseded"
 		},
 		{
 			"fieldname": "submitted_on",
@@ -345,6 +348,25 @@
 			"read_only": 1
 		},
 		{
+			"fieldname": "section_e",
+			"fieldtype": "Section Break",
+			"label": "Data Subject Consent (Jubilee Life Insurance Limited)"
+		},
+		{
+			"description": "Consent for processing of personal and sensitive personal data under the Data Protection Act, 2019.",
+			"fieldname": "data_consent",
+			"fieldtype": "Select",
+			"label": "Data Processing Consent",
+			"options": "\nI Consent\nI Do Not Consent"
+		},
+		{
+			"description": "Consent to receive marketing information from Jubilee Life and other Jubilee Insurance entities.",
+			"fieldname": "marketing_consent",
+			"fieldtype": "Select",
+			"label": "Marketing Consent",
+			"options": "\nI Consent\nI Do Not Consent"
+		},
+		{
 			"fieldname": "section_review",
 			"fieldtype": "Section Break",
 			"label": "Review & Trustee Certification"
@@ -440,6 +462,14 @@
 			"read": 1,
 			"report": 1,
 			"role": "HR Manager",
+			"write": 1
+		},
+		{
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Pension Trustee",
 			"write": 1
 		},
 		{

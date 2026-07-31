@@ -33,6 +33,7 @@ STAFF_FIELDS = [
 	"bank_account_name", "bank_name", "bank_branch", "bank_account_number",
 	"bank_town_city", "bank_code", "branch_code", "swift_code", "sort_or_iban_code",
 	"declaration_accepted", "signed_at",
+	"data_consent", "marketing_consent",
 ]
 
 BENEFICIARY_FIELDS = [
@@ -433,18 +434,57 @@ def get_form_detail(name):
 
 
 @frappe.whitelist()
+def officer_update_form(name, payload):
+	"""Let a reviewer correct a member's details on any form, regardless of
+	status. Lifecycle/review/trustee fields stay untouched; beneficiary
+	rules are re-validated so an edit cannot break a submitted form."""
+	frappe.has_permission(DOCTYPE, doc=name, ptype="write", throw=True)
+
+	if isinstance(payload, str):
+		payload = json.loads(payload)
+
+	doc = frappe.get_doc(DOCTYPE, name)
+
+	for fieldname in STAFF_FIELDS:
+		if fieldname in payload:
+			doc.set(fieldname, payload.get(fieldname))
+
+	if "beneficiaries" in payload or "guardians" in payload:
+		_rebuild_children(doc, payload)
+
+	if doc.beneficiaries:
+		from onerc_compliance.scheme_utils import validate_beneficiaries, validate_guardians
+
+		validate_beneficiaries(doc)
+		validate_guardians(doc)
+
+	doc.save(ignore_permissions=True)
+	return _ok(_serialize_doc(doc))
+
+
+@frappe.whitelist()
 def review_form(name, action, remarks=None):
 	frappe.has_permission(DOCTYPE, doc=name, ptype="write", throw=True)
 
-	allowed_actions = {"Reviewed", "Needs More Info", "Rejected"}
+	allowed_actions = {"Reviewed", "Approved", "Needs More Info", "Rejected"}
 	if action not in allowed_actions:
-		return _err(_("Invalid action. Must be one of: Reviewed, Needs More Info, Rejected."))
+		return _err(_("Invalid action. Must be one of: Reviewed, Approved, Needs More Info, Rejected."))
 
 	if action in ("Needs More Info", "Rejected") and not (remarks or "").strip():
 		return _err(_("Remarks are required for action '{0}'.").format(action))
 
 	doc = frappe.get_doc(DOCTYPE, name)
-	if doc.status != "Submitted":
+
+	if action == "Approved":
+		from onerc_compliance.scheme_utils import user_is_trustee
+
+		if not user_is_trustee():
+			return _err(_("Only a Pension Trustee can approve forms."))
+		if doc.status != "Reviewed":
+			return _err(
+				_("Only forms in 'Reviewed' status can be approved. Current status: {0}.").format(doc.status)
+			)
+	elif doc.status != "Submitted":
 		return _err(
 			_("Only forms in 'Submitted' status can be reviewed. Current status: {0}.").format(doc.status)
 		)
@@ -500,6 +540,348 @@ def certify_form(name, trustee_name=None, documents_checked=None):
 		"trustee_1_name": doc.trustee_1_name,
 		"trustee_2_name": doc.trustee_2_name,
 	})
+
+
+@frappe.whitelist()
+def export_forms(status=None, search=None, department=None):
+	"""Download all pension compliance forms as an Excel file.
+
+	One row per beneficiary (a form without beneficiaries still gets one
+	row), so HR can process nominations straight into Business Central.
+	Respects the same filters as the review list.
+	"""
+	frappe.has_permission(DOCTYPE, ptype="write", throw=True)
+
+	filters = []
+	if status:
+		filters.append(["status", "=", status])
+	if department:
+		if department == "Unassigned":
+			filters.append(["department", "is", "not set"])
+		else:
+			filters.append(["department", "=", department])
+
+	or_filters = None
+	if search and (search or "").strip():
+		term = "%{0}%".format(search.strip())
+		or_filters = [
+			["employee_name", "like", term],
+			["employee", "like", term],
+			["employee_number", "like", term],
+		]
+
+	names = frappe.get_all(
+		DOCTYPE,
+		filters=filters,
+		or_filters=or_filters,
+		order_by="employee_name asc, name asc",
+		pluck="name",
+	)
+
+	header = [
+		"Form ID", "Status", "Employee No", "Employee Name", "Department", "Position",
+		"Member's Full Name", "Date of Birth", "Marital Status", "ID No.", "KRA PIN",
+		"Work Email", "Personal Email", "Mobile", "Member Number",
+		"Date of Admission", "Date of Appointment", "Scheme Name",
+		"AVC Amount (Kshs)", "AVC Percent",
+		"Bank Account Name", "Bank", "Bank Branch", "Account Number",
+		"Town/City", "Bank Code", "Branch Code", "SWIFT", "SORT/IBAN",
+		"Beneficiary Name", "Relationship", "Beneficiary DOB",
+		"Beneficiary ID No.", "Birth Certificate No.", "Beneficiary Mobile",
+		"% Share", "Beneficiary Source", "Guardian Name", "Guardian ID No.",
+		"Guardian Relationship",
+		"Signed At", "Declaration Date", "Submitted On",
+		"Trustee 1", "Trustee 2", "Date Received by Trustee",
+	]
+	data = [header]
+
+	for name in names:
+		doc = frappe.get_doc(DOCTYPE, name)
+
+		guardians_by_beneficiary = {}
+		for g in doc.guardians:
+			guardians_by_beneficiary.setdefault((g.beneficiary_name or "").strip(), g)
+
+		base = [
+			doc.name, doc.status, doc.employee_number, doc.employee_name,
+			doc.department, doc.occupation,
+			doc.member_full_name, doc.date_of_birth, doc.marital_status,
+			doc.id_number, doc.kra_pin, doc.email, doc.personal_email,
+			doc.mobile_number, doc.member_number,
+			doc.date_of_admission, doc.date_of_appointment, doc.scheme_name,
+			doc.avc_amount, doc.avc_percent,
+			doc.bank_account_name, doc.bank_name, doc.bank_branch,
+			doc.bank_account_number, doc.bank_town_city, doc.bank_code,
+			doc.branch_code, doc.swift_code, doc.sort_or_iban_code,
+		]
+		tail = [
+			doc.signed_at, doc.declaration_date, doc.submitted_on,
+			doc.trustee_1_name, doc.trustee_2_name, doc.date_received_by_trustee,
+		]
+
+		if doc.beneficiaries:
+			for b in doc.beneficiaries:
+				g = guardians_by_beneficiary.get((b.full_name or "").strip())
+				data.append(base + [
+					b.full_name, b.relationship, b.date_of_birth,
+					b.id_number, b.birth_certificate_no, b.mobile,
+					b.share_percent,
+					"HR records" if b.source == "Business Central" else "Member",
+					g.guardian_name if g else "",
+					g.id_number if g else "",
+					g.relationship_to_beneficiary if g else "",
+				] + tail)
+		else:
+			data.append(base + [""] * 11 + tail)
+
+	from frappe.utils.xlsxutils import make_xlsx
+
+	xlsx = make_xlsx(data, "Pension Compliance")
+	frappe.response["filename"] = "pension_compliance_forms.xlsx"
+	frappe.response["filecontent"] = xlsx.getvalue()
+	frappe.response["type"] = "binary"
+
+
+def _render_membership_html(doc):
+	"""Render the pixel-accurate Jubilee Membership Application Form replica
+	(4 pages incl. the data-subject consent) filled with the member's data.
+	Signature and stamp boxes stay blank for wet signing."""
+	from frappe.utils import escape_html, formatdate
+
+	def esc(value):
+		return escape_html(str(value)) if value not in (None, "") else ""
+
+	def fmt_date(value):
+		return formatdate(value, "dd/MM/yyyy") if value else ""
+
+	def fmt_share(value):
+		if not value:
+			return ""
+		value = float(value)
+		return str(int(value)) if value == int(value) else str(round(value, 2))
+
+	beneficiaries = [
+		{
+			"name": esc(b.full_name),
+			"email": esc(b.email),
+			"mobile": esc(b.mobile),
+			"dob": fmt_date(b.date_of_birth),
+			"id_no": esc(b.id_number or b.birth_certificate_no),
+			"relationship": esc(b.relationship),
+			"share": fmt_share(b.share_percent),
+		}
+		for b in doc.beneficiaries
+	]
+	while len(beneficiaries) < 6:
+		beneficiaries.append({k: "" for k in ("name", "email", "mobile", "dob", "id_no", "relationship", "share")})
+
+	guardians = [
+		{
+			"name": esc(g.guardian_name),
+			"email": esc(g.email),
+			"mobile": esc(g.mobile),
+			"id_no": esc(g.id_number),
+			"beneficiary": esc(g.beneficiary_name),
+			"relationship": esc(g.relationship_to_beneficiary),
+		}
+		for g in doc.guardians
+	]
+	while len(guardians) < 4:
+		guardians.append({k: "" for k in ("name", "email", "mobile", "id_no", "beneficiary", "relationship")})
+
+	context = {
+		"form_id": esc(doc.name),
+		"scheme_name": esc(doc.scheme_name),
+		"member_name": esc(doc.member_full_name),
+		"occupation": esc(doc.occupation),
+		"dob": fmt_date(doc.date_of_birth),
+		"member_no": esc(doc.member_number),
+		"admission_date": fmt_date(doc.date_of_admission),
+		"appointment_date": fmt_date(doc.date_of_appointment),
+		"mobile": esc(doc.mobile_number),
+		"email": esc(doc.email or doc.personal_email),
+		"kra_pin": esc(doc.kra_pin),
+		"id_no": esc(doc.id_number),
+		"avc_amount": esc(doc.avc_amount or ""),
+		"avc_percent": fmt_share(doc.avc_percent),
+		"account_name": esc(doc.bank_account_name),
+		"bank": esc(doc.bank_name),
+		"bank_branch": esc(doc.bank_branch),
+		"account_number": esc(doc.bank_account_number),
+		"town_city": esc(doc.bank_town_city),
+		"bank_code": esc(doc.bank_code),
+		"branch_code": esc(doc.branch_code),
+		"swift_code": esc(doc.swift_code),
+		"sort_iban_code": esc(doc.sort_or_iban_code),
+		"nominator_name": esc(doc.member_full_name),
+		"member_date": fmt_date(doc.declaration_date),
+		"trustee1_name": esc(doc.trustee_1_name),
+		"trustee1_date": fmt_date(doc.trustee_1_certified_on),
+		"trustee2_name": esc(doc.trustee_2_name),
+		"trustee2_date": fmt_date(doc.trustee_2_certified_on),
+		"consent_name": esc(doc.member_full_name),
+		"consent_date": fmt_date(doc.declaration_date),
+		"dp_consent_checked": "checked" if doc.data_consent == "I Consent" else "",
+		"dp_do_not_consent_checked": "checked" if doc.data_consent == "I Do Not Consent" else "",
+		"mkt_consent_checked": "checked" if doc.marketing_consent == "I Consent" else "",
+		"mkt_do_not_consent_checked": "checked" if doc.marketing_consent == "I Do Not Consent" else "",
+		"beneficiaries": beneficiaries,
+		"guardians": guardians,
+	}
+
+	template = open(
+		frappe.get_app_path("onerc_compliance", "templates", "pension", "jubilee_membership_form.html"),
+		encoding="utf-8",
+	).read()
+	return frappe.render_template(template, context)
+
+
+def _build_membership_pdf(doc):
+	"""The filled Jubilee form as PDF bytes (wkhtmltopdf-compatible)."""
+	from frappe.utils.pdf import get_pdf
+
+	html = _render_membership_html(doc)
+
+	# wkhtmltopdf's WebKit predates CSS custom properties — inline them,
+	# or every var()-based position/colour/border silently collapses.
+	css_vars = {
+		"--red": "#CD143D", "--maroon": "#A91E47", "--grey": "#DADFE3",
+		"--ink": "#231F20", "--fill": "#00337a",
+		"--cl": "17.9mm", "--cw": "174.4mm", "--rc": "96.2mm", "--rw": "96.1mm",
+	}
+	for var, value in css_vars.items():
+		html = html.replace("var({0})".format(var), value)
+
+	# No flexbox in wkhtmltopdf either: filled-in <input>s don't stretch
+	# and clip their values, so render them as plain text spans. Empty
+	# inputs stay as-is (they draw the blank boxes/underlines).
+	import re as _re
+
+	html = _re.sub(
+		r'<input(?![^>]*type="checkbox")[^>]*?value="([^"]*)"[^>]*>',
+		r'<span class="pdfv">\1</span>',
+		html,
+	)
+	# The consent checkboxes use appearance:none + a CSS-drawn tick,
+	# neither of which wkhtmltopdf supports — draw them as bordered
+	# boxes with a real tick character instead.
+	html = _re.sub(
+		r'<input type="checkbox"[^>]*\bchecked\b[^>]*>',
+		'<span class="pdfcb">&#10004;</span>',
+		html,
+	)
+	html = _re.sub(
+		r'<input type="checkbox"[^>]*>',
+		'<span class="pdfcb"></span>',
+		html,
+	)
+	html = html.replace(
+		"</head>",
+		"<style>"
+		"table.f td, table.f th{border:0.35mm solid #231F20 !important;}"
+		".pdfv{color:#00337a;font-size:8.5pt;padding:0 1.4mm;white-space:nowrap;}"
+		"td.v .pdfv{display:block;}"
+		".pdfcb{display:inline-block;width:3.2mm;height:3.2mm;border:0.35mm solid #231F20;"
+		"font-size:8pt;line-height:3.2mm;text-align:center;vertical-align:middle;color:#231F20;}"
+		# A full 297mm page overflows wkhtmltopdf's printable area by a
+		# hair and spills a blank page before each page break — shave the
+		# page height slightly so each sheet fits exactly.
+		"html{background:#fff;}body{padding:0;margin:0;}"
+		".page{height:295mm !important;margin:0 auto !important;box-shadow:none !important;"
+		"page-break-after:always;}"
+		".page:last-of-type{page-break-after:auto;}"
+		# frappe's get_pdf force-resets page margins to 15mm unless a
+		# .print-format rule declares them — 15mm shrinks the printable
+		# area below our page height and spills a blank page per sheet.
+		".print-format{margin-top:0mm;margin-bottom:0mm;margin-left:0mm;margin-right:0mm;}"
+		"</style></head>",
+	)
+
+	return get_pdf(
+		html, options={"page-size": "A4", "margin-top": "0mm", "margin-bottom": "0mm",
+			"margin-left": "0mm", "margin-right": "0mm"}
+	)
+
+
+@frappe.whitelist()
+def export_membership_form(name, as_pdf=0):
+	"""Download one form as the official Jubilee Membership Application Form."""
+	frappe.has_permission(DOCTYPE, doc=name, ptype="print", throw=True)
+
+	doc = frappe.get_doc(DOCTYPE, name)
+
+	if int(as_pdf or 0):
+		frappe.response["filename"] = "{0}_membership_application.pdf".format(doc.name)
+		frappe.response["filecontent"] = _build_membership_pdf(doc)
+		frappe.response["type"] = "pdf"
+	else:
+		frappe.response["filename"] = "{0}_membership_application.html".format(doc.name)
+		frappe.response["filecontent"] = _render_membership_html(doc)
+		frappe.response["type"] = "binary"
+
+
+def send_approval_notification(doc):
+	"""Email the configured recipients that a form was approved, attaching
+	the filled Jubilee membership PDF. Called from the doctype controller
+	when a form transitions to Approved."""
+	settings = frappe.get_cached_doc("Occupational Scheme Settings")
+	raw = settings.get("notification_emails") or ""
+	recipients = [e.strip() for e in raw.replace(",", "\n").splitlines() if e.strip()]
+	if not recipients:
+		return
+
+	beneficiary_lines = "".join(
+		"<li>{0} ({1}) - {2}%</li>".format(
+			frappe.utils.escape_html(b.full_name or ""),
+			frappe.utils.escape_html(b.relationship or ""),
+			b.share_percent,
+		)
+		for b in doc.beneficiaries
+	)
+
+	def row(label, value):
+		return "<tr><td style='padding:2px 12px 2px 0;color:#666'>{0}</td><td style='padding:2px 0'><b>{1}</b></td></tr>".format(
+			label, frappe.utils.escape_html(str(value)) if value else "-"
+		)
+
+	message = """
+		<p>The following pension compliance form has been <b>approved</b> by the scheme trustees.
+		The filled Jubilee Membership Application Form is attached as PDF.</p>
+		<table style='font-size:13px'>
+			{rows}
+		</table>
+		<p><b>Beneficiaries</b></p>
+		<ul style='font-size:13px'>{beneficiaries}</ul>
+	""".format(
+		rows="".join([
+			row("Form", doc.name),
+			row("Member", doc.member_full_name),
+			row("Employee No", doc.employee_number),
+			row("Department", doc.department),
+			row("Position", doc.occupation),
+			row("Member No", doc.member_number),
+			row("ID No", doc.id_number),
+			row("Work Email", doc.email),
+			row("Personal Email", doc.personal_email),
+			row("Mobile", doc.mobile_number),
+			row("Scheme", doc.scheme_name),
+			row("Approved By", frappe.utils.get_fullname(frappe.session.user)),
+			row("Approved On", frappe.utils.formatdate(frappe.utils.today(), "dd/MM/yyyy")),
+		]),
+		beneficiaries=beneficiary_lines or "<li>-</li>",
+	)
+
+	frappe.sendmail(
+		recipients=recipients,
+		subject=_("Pension Compliance Approved: {0} ({1})").format(
+			doc.member_full_name or doc.employee_name, doc.name
+		),
+		message=message,
+		attachments=[{
+			"fname": "{0}_membership_application.pdf".format(doc.name),
+			"fcontent": _build_membership_pdf(doc),
+		}],
+	)
 
 
 @frappe.whitelist()

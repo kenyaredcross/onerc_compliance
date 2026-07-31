@@ -16,7 +16,7 @@
 			"fieldtype": "Select",
 			"in_list_view": 1,
 			"label": "Action",
-			"options": "Reviewed\nNeeds More Info\nRejected"
+			"options": "Reviewed\nApproved\nNeeds More Info\nRejected"
 		},
 		{
 			"fieldname": "reviewer",

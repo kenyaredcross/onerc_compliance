@@ -7,6 +7,7 @@
 		"scheme_name",
 		"administrator_name",
 		"enrolment_open",
+		"notification_emails",
 		"staff_instructions",
 		"section_legal",
 		"nomination_statement",
@@ -30,6 +31,12 @@
 			"fieldname": "enrolment_open",
 			"fieldtype": "Check",
 			"label": "Enrolment Open"
+		},
+		{
+			"description": "Emails that receive the approval notification (with the filled Jubilee PDF attached), one per line or comma-separated.",
+			"fieldname": "notification_emails",
+			"fieldtype": "Small Text",
+			"label": "Approval Notification Emails"
 		},
 		{
 			"fieldname": "staff_instructions",

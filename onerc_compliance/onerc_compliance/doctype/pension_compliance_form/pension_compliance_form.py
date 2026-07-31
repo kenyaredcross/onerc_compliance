@@ -15,6 +15,7 @@ from onerc_compliance.scheme_utils import (
 	is_submit_action,
 	require_fields,
 	supersede_previous,
+	user_is_trustee,
 	validate_beneficiaries,
 	validate_guardians,
 	validate_review_remarks,
@@ -41,10 +42,21 @@ class PensionComplianceForm(Document):
 		enforce_transition(self)
 		validate_review_remarks(self)
 
+		# Officers bypass the transition machine, so gate Approved explicitly:
+		# only a Pension Trustee (or System Manager) may grant final approval.
+		if (
+			self.status == "Approved"
+			and self._prev_status != "Approved"
+			and not user_is_trustee()
+		):
+			frappe.throw(_("Only a Pension Trustee can approve this form."))
+
 		if is_submit_action(self):
 			require_fields(self, SUBMIT_REQUIRED_FIELDS)
 			if not self.declaration_accepted:
 				frappe.throw(_("You must accept the declaration before submitting."))
+			if not (self.data_consent or "").strip():
+				frappe.throw(_("Please answer the Data Subject Consent (I Consent / I Do Not Consent) before submitting."))
 			if self.avc_amount and self.avc_percent:
 				frappe.throw(
 					_("Additional Voluntary Contributions: fill either an amount or a percentage, not both.")
@@ -54,7 +66,14 @@ class PensionComplianceForm(Document):
 			apply_submit_timestamps(self)
 
 	def on_update(self):
-		if self.status == "Reviewed" and getattr(self, "_prev_status", None) != "Reviewed":
+		if self.status == "Approved" and getattr(self, "_prev_status", None) != "Approved":
 			if not self.date_received_by_trustee:
 				self.db_set("date_received_by_trustee", today(), update_modified=False)
 			supersede_previous(self, DOCTYPE)
+			try:
+				from onerc_compliance.api.v1.scheme import send_approval_notification
+
+				send_approval_notification(self)
+			except Exception:
+				# A mail problem must never block the approval itself.
+				frappe.log_error(frappe.get_traceback(), "Pension approval notification failed")

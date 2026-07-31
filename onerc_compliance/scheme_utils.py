@@ -6,14 +6,16 @@ from frappe import _
 from frappe.utils import getdate, now_datetime, today
 
 ACTIVE_STATUSES = ("Draft", "Submitted", "Needs More Info")
-LOCKED_STATUSES = ("Submitted", "Reviewed", "Rejected", "Superseded")
-OFFICER_ROLES = {"Compliance Officer", "HR Manager", "System Manager"}
+LOCKED_STATUSES = ("Submitted", "Reviewed", "Approved", "Rejected", "Superseded")
+OFFICER_ROLES = {"Compliance Officer", "HR Manager", "Pension Trustee", "System Manager"}
+TRUSTEE_ROLES = {"Pension Trustee", "System Manager"}
 
 ALLOWED_TRANSITIONS = {
 	"Draft": {"Submitted"},
 	"Submitted": {"Reviewed", "Needs More Info", "Rejected"},
 	"Needs More Info": {"Submitted"},
-	"Reviewed": {"Superseded"},
+	"Reviewed": {"Approved", "Superseded"},
+	"Approved": {"Superseded"},
 	"Rejected": set(),
 	"Superseded": set(),
 }
@@ -21,6 +23,10 @@ ALLOWED_TRANSITIONS = {
 
 def user_is_officer(user=None):
 	return bool(OFFICER_ROLES & set(frappe.get_roles(user or frappe.session.user)))
+
+
+def user_is_trustee(user=None):
+	return bool(TRUSTEE_ROLES & set(frappe.get_roles(user or frappe.session.user)))
 
 
 def capture_prev_status(doc, doctype):
@@ -39,6 +45,10 @@ def enforce_lock(doc):
 
 
 def enforce_transition(doc):
+	# Officers (e.g. working in Desk) may set any status; the strict
+	# state machine only binds staff members.
+	if user_is_officer():
+		return
 	if doc.is_new():
 		if doc.status not in ("Draft", "Submitted"):
 			frappe.throw(_("A new form must start as Draft or Submitted."))
@@ -160,12 +170,12 @@ def require_fields(doc, fieldname_labels):
 
 
 def supersede_previous(doc, doctype):
-	"""When a form becomes Reviewed, archive any prior Reviewed form for the employee."""
+	"""When a form becomes Approved, archive any prior Reviewed/Approved form for the employee."""
 	prior = frappe.get_all(
 		doctype,
 		filters={
 			"employee": doc.employee,
-			"status": "Reviewed",
+			"status": ["in", ["Reviewed", "Approved"]],
 			"name": ["!=", doc.name],
 		},
 		pluck="name",

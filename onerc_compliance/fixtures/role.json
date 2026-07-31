@@ -4,5 +4,11 @@
         "name": "Compliance Officer",
         "role_name": "Compliance Officer",
         "desk_access": 1
+    },
+    {
+        "doctype": "Role",
+        "name": "Pension Trustee",
+        "role_name": "Pension Trustee",
+        "desk_access": 1
     }
 ]

@@ -22,6 +22,12 @@
       <button v-if="search || statusFilter" class="btn-secondary text-xs py-1.5" @click="clearFilters">
         Clear filters
       </button>
+      <button class="btn-primary text-xs py-1.5 flex items-center gap-1.5" @click="exportForms">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        Export
+      </button>
     </div>
 
     <!-- List -->
@@ -60,6 +66,85 @@
           <div v-if="expanded === row.name" class="bg-gray-50 border-t border-gray-100 divide-y divide-gray-200">
 
             <div v-if="detailLoading" class="p-6 text-sm text-gray-400 text-center">Loading detail…</div>
+
+            <!-- ===== EDIT MODE ===== -->
+            <template v-else-if="detail && editing">
+              <div class="p-5 space-y-5">
+                <div class="flex items-center justify-between">
+                  <p class="text-xs font-bold text-navy uppercase tracking-wide">Editing {{ detail.name }}</p>
+                  <div class="flex gap-2">
+                    <button class="btn-secondary text-xs py-1.5" :disabled="savingEdit" @click="cancelEdit">Cancel</button>
+                    <button class="btn-primary text-xs py-1.5" :disabled="savingEdit" @click="saveEdit">
+                      {{ savingEdit ? 'Saving…' : 'Save Changes' }}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <p class="text-xs font-semibold text-gray-500 mb-2">Member &amp; Employment Details</p>
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div v-for="f in memberEditFields" :key="f.key">
+                      <label class="label">{{ f.label }}</label>
+                      <select v-if="f.type === 'select'" class="input-field text-sm" v-model="editDraft[f.key]">
+                        <option value=""></option>
+                        <option v-for="o in f.options" :key="o">{{ o }}</option>
+                      </select>
+                      <input v-else :type="f.type || 'text'" class="input-field text-sm" v-model="editDraft[f.key]" />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <p class="text-xs font-semibold text-gray-500 mb-2">Bank Details</p>
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div v-for="f in bankEditFields" :key="f.key">
+                      <label class="label">{{ f.label }}</label>
+                      <input type="text" class="input-field text-sm" v-model="editDraft[f.key]" />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <p class="text-xs font-semibold text-gray-500">Beneficiaries</p>
+                    <button class="text-xs font-medium text-primary hover:underline" @click="addEditBeneficiary">+ Add</button>
+                  </div>
+                  <div v-for="(b, i) in editDraft.beneficiaries" :key="i" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2 p-2 rounded border border-gray-200 bg-white">
+                    <input type="text" class="input-field text-sm" placeholder="Name" v-model="b.full_name" />
+                    <input type="text" class="input-field text-sm" placeholder="Relationship" v-model="b.relationship" />
+                    <input type="date" class="input-field text-sm" v-model="b.date_of_birth" />
+                    <input type="text" class="input-field text-sm" placeholder="ID No." v-model="b.id_number" />
+                    <input type="text" class="input-field text-sm" placeholder="Birth Cert No." v-model="b.birth_certificate_no" />
+                    <input type="text" class="input-field text-sm" placeholder="Mobile" v-model="b.mobile" />
+                    <input type="number" min="0" max="100" step="0.01" class="input-field text-sm" placeholder="% Share" v-model.number="b.share_percent" />
+                    <button class="text-xs text-error hover:underline text-left" @click="editDraft.beneficiaries.splice(i, 1)">Remove</button>
+                  </div>
+                  <p class="text-xs" :class="editTotalOk ? 'text-green-700' : 'text-error'">
+                    Total allocation: {{ editTotal.toFixed(2) }}% {{ editTotalOk ? '✓' : '(must equal 100%)' }}
+                  </p>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <p class="text-xs font-semibold text-gray-500">Guardians</p>
+                    <button class="text-xs font-medium text-primary hover:underline" @click="addEditGuardian">+ Add</button>
+                  </div>
+                  <div v-for="(g, i) in editDraft.guardians" :key="i" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2 p-2 rounded border border-gray-200 bg-white">
+                    <input type="text" class="input-field text-sm" placeholder="Guardian Name" v-model="g.guardian_name" />
+                    <select class="input-field text-sm" v-model="g.beneficiary_name">
+                      <option value="" disabled>Guardian of…</option>
+                      <option v-for="n in editBeneficiaryNames" :key="n" :value="n">{{ n }}</option>
+                    </select>
+                    <input type="text" class="input-field text-sm" placeholder="Relationship to Beneficiary" v-model="g.relationship_to_beneficiary" />
+                    <input type="text" class="input-field text-sm" placeholder="ID No." v-model="g.id_number" />
+                    <input type="text" class="input-field text-sm" placeholder="Mobile" v-model="g.mobile" />
+                    <button class="text-xs text-error hover:underline text-left" @click="editDraft.guardians.splice(i, 1)">Remove</button>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- ===== VIEW MODE ===== -->
             <template v-else-if="detail">
 
               <!-- PART 1: MEMBER & EMPLOYMENT DETAILS -->
@@ -82,6 +167,8 @@
                   <div><span class="text-gray-400 text-xs block">Date of Appointment</span>{{ detail.date_of_appointment || '-' }}</div>
                   <div><span class="text-gray-400 text-xs block">Scheme Name</span>{{ detail.scheme_name || '-' }}</div>
                   <div><span class="text-gray-400 text-xs block">Signed At</span>{{ detail.signed_at || '-' }}</div>
+                  <div><span class="text-gray-400 text-xs block">Data Consent</span>{{ detail.data_consent || '-' }}</div>
+                  <div><span class="text-gray-400 text-xs block">Marketing Consent</span>{{ detail.marketing_consent || '-' }}</div>
                 </div>
               </div>
 
@@ -153,11 +240,23 @@
                 <p class="text-xs font-bold text-navy uppercase tracking-wide">Review</p>
 
                 <div class="space-y-2">
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-xs font-semibold text-gray-600">Pension Compliance Form</span>
                     <StatusBadge :status="detail.status" />
                     <span class="text-xs text-gray-400">{{ detail.name }}</span>
                     <span v-if="detail.amends" class="text-xs text-gray-400">(amends {{ detail.amends }})</span>
+                    <div class="flex items-center gap-2 ml-auto">
+                      <button
+                        type="button"
+                        class="btn-secondary text-xs py-1"
+                        @click="startEdit"
+                      >Edit</button>
+                      <button
+                        type="button"
+                        class="btn-secondary text-xs py-1"
+                        @click="exportMembershipForm(detail.name)"
+                      >Download Jubilee Form (PDF)</button>
+                    </div>
                   </div>
                   <div v-if="detail.review_actions?.length" class="space-y-1">
                     <div v-for="(act, i) in detail.review_actions" :key="i" class="flex flex-wrap gap-2 text-xs items-center text-gray-600">
@@ -177,6 +276,27 @@
                     :name="detail.name"
                     @done="onReviewDone(row)"
                   />
+
+                  <!-- Trustee approval: Reviewed forms, Pension Trustee only -->
+                  <div v-if="detail.status === 'Reviewed'" class="mt-2">
+                    <div v-if="auth.isTrustee" class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-2">
+                      <p class="text-xs font-semibold text-emerald-800">
+                        Trustee approval - approving sends the notification email with the Jubilee PDF attached.
+                      </p>
+                      <textarea
+                        class="input-field resize-none text-sm"
+                        rows="2"
+                        placeholder="Remarks (optional)"
+                        v-model="approveRemarks"
+                      />
+                      <button class="btn-primary text-xs !bg-emerald-600 hover:!bg-emerald-700" :disabled="approving" @click="approve">
+                        {{ approving ? 'Approving…' : 'Approve' }}
+                      </button>
+                    </div>
+                    <p v-else class="text-xs text-gray-400 italic">
+                      Awaiting approval by a Pension Trustee.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -203,11 +323,13 @@ import { ref, computed, onMounted, defineComponent, h } from 'vue'
 import { useApi } from '../composables/useApi.js'
 import { useToast } from '../composables/useToast.js'
 import StatusBadge from '../components/StatusBadge.vue'
+import { useAuthStore } from '../stores/auth.js'
 
 const api = useApi()
 const toast = useToast()
+const auth = useAuthStore()
 
-const statuses = ['Draft', 'Submitted', 'Needs More Info', 'Reviewed', 'Rejected', 'Superseded']
+const statuses = ['Draft', 'Submitted', 'Needs More Info', 'Reviewed', 'Approved', 'Rejected', 'Superseded']
 
 const loading = ref(false)
 const loadError = ref('')
@@ -223,6 +345,104 @@ const statusFilter = ref('Submitted')
 const expanded = ref(null)
 const detail = ref(null)
 const detailLoading = ref(false)
+
+// ---- Officer edit mode ----
+const editing = ref(false)
+const savingEdit = ref(false)
+const editDraft = ref(null)
+
+const memberEditFields = [
+  { key: 'member_full_name', label: 'Full Name' },
+  { key: 'occupation', label: 'Position' },
+  { key: 'date_of_birth', label: 'Date of Birth', type: 'date' },
+  { key: 'marital_status', label: 'Marital Status', type: 'select', options: ['Single', 'Married', 'Divorced', 'Widowed'] },
+  { key: 'id_number', label: 'ID No.' },
+  { key: 'kra_pin', label: 'KRA PIN' },
+  { key: 'email', label: 'Work Email' },
+  { key: 'personal_email', label: 'Personal Email' },
+  { key: 'mobile_number', label: 'Mobile' },
+  { key: 'member_number', label: 'Member Number' },
+  { key: 'date_of_admission', label: 'Date of Admission', type: 'date' },
+  { key: 'date_of_appointment', label: 'Date of Appointment', type: 'date' },
+  { key: 'signed_at', label: 'Signed At' },
+  { key: 'data_consent', label: 'Data Consent', type: 'select', options: ['I Consent', 'I Do Not Consent'] },
+  { key: 'marketing_consent', label: 'Marketing Consent', type: 'select', options: ['I Consent', 'I Do Not Consent'] },
+  { key: 'avc_amount', label: 'AVC Amount (Kshs)', type: 'number' },
+  { key: 'avc_percent', label: 'AVC Percent', type: 'number' },
+]
+const bankEditFields = [
+  { key: 'bank_account_name', label: 'Account Name' },
+  { key: 'bank_name', label: 'Bank' },
+  { key: 'bank_branch', label: 'Bank Branch' },
+  { key: 'bank_account_number', label: 'Account Number' },
+  { key: 'bank_town_city', label: 'Town/City' },
+  { key: 'bank_code', label: 'Bank Code' },
+  { key: 'branch_code', label: 'Branch Code' },
+  { key: 'swift_code', label: 'SWIFT Code' },
+  { key: 'sort_or_iban_code', label: 'SORT/IBAN Code' },
+]
+
+const editTotal = computed(() =>
+  (editDraft.value?.beneficiaries || []).reduce((sum, b) => sum + (Number(b.share_percent) || 0), 0)
+)
+const editTotalOk = computed(() => Math.abs(editTotal.value - 100) <= 0.01)
+const editBeneficiaryNames = computed(() =>
+  (editDraft.value?.beneficiaries || []).map((b) => (b.full_name || '').trim()).filter(Boolean)
+)
+
+function startEdit() {
+  editDraft.value = {
+    ...detail.value,
+    beneficiaries: (detail.value.beneficiaries || []).map((b) => ({ ...b })),
+    guardians: (detail.value.guardians || []).map((g) => ({ ...g })),
+  }
+  editing.value = true
+}
+
+function cancelEdit() {
+  editing.value = false
+  editDraft.value = null
+}
+
+function addEditBeneficiary() {
+  editDraft.value.beneficiaries.push({
+    full_name: '', email: '', mobile: '', date_of_birth: '', id_number: '',
+    birth_certificate_no: '', relationship: '', share_percent: null,
+    source: 'Manual', bc_relative_no: '', bc_line_no: 0, bc_category: '',
+  })
+}
+
+function addEditGuardian() {
+  editDraft.value.guardians.push({
+    guardian_name: '', email: '', mobile: '', id_number: '',
+    beneficiary_name: '', relationship_to_beneficiary: '',
+  })
+}
+
+async function saveEdit() {
+  if (editDraft.value.beneficiaries.length && !editTotalOk.value) {
+    toast.error('Beneficiary % shares must total exactly 100.')
+    return
+  }
+  savingEdit.value = true
+  try {
+    const res = await api.call('onerc_compliance.api.v1.scheme.officer_update_form', {
+      name: editDraft.value.name,
+      payload: editDraft.value,
+    })
+    if (res.status !== 'success') { toast.error(res.message || 'Save failed.'); return }
+    detail.value = res.data
+    editing.value = false
+    editDraft.value = null
+    toast.success('Changes saved.')
+    await load(page.value)
+    expanded.value = detail.value.name
+  } catch (e) {
+    toast.error(e.message || 'Save failed.')
+  } finally {
+    savingEdit.value = false
+  }
+}
 
 let searchTimer = null
 function onSearch() {
@@ -261,6 +481,8 @@ async function load(p = 1) {
 }
 
 async function toggleRow(row) {
+  editing.value = false
+  editDraft.value = null
   if (expanded.value === row.name) {
     expanded.value = null
     detail.value = null
@@ -287,9 +509,61 @@ async function onReviewDone(row) {
   if (fresh) await toggleRow(fresh) // re-expand with fresh data
 }
 
+async function exportMembershipForm(name) {
+  // Download the filled Jubilee Membership Application Form as a PDF.
+  try {
+    const res = await fetch(
+      `/api/method/onerc_compliance.api.v1.scheme.export_membership_form?name=${encodeURIComponent(name)}&as_pdf=1`
+    )
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const buf = await res.arrayBuffer()
+    const url = URL.createObjectURL(new Blob([buf], { type: 'application/pdf' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${name}_membership_application.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (e) {
+    toast.error(e.message || 'Download failed.')
+  }
+}
+
+function exportForms() {
+  // Excel download of all forms matching the current filters (all statuses
+  // when no status filter is set). Session cookie authenticates the request.
+  const params = new URLSearchParams()
+  if (statusFilter.value) params.set('status', statusFilter.value)
+  if (search.value.trim()) params.set('search', search.value.trim())
+  window.open(`/api/method/onerc_compliance.api.v1.scheme.export_forms?${params.toString()}`, '_blank')
+}
+
 function formatDate(val) {
   if (!val) return '-'
   return new Date(val).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+// ---- Trustee approval ----
+const approveRemarks = ref('')
+const approving = ref(false)
+
+async function approve() {
+  approving.value = true
+  try {
+    const res = await api.call('onerc_compliance.api.v1.scheme.review_form', {
+      name: detail.value.name,
+      action: 'Approved',
+      remarks: approveRemarks.value || '',
+    })
+    if (res.status !== 'success') { toast.error(res.message || 'Approval failed.'); return }
+    toast.success('Form approved - notification email with the Jubilee PDF is being sent.')
+    approveRemarks.value = ''
+    const row = rows.value.find((r) => r.name === detail.value.name)
+    if (row) await onReviewDone(row)
+  } catch (e) {
+    toast.error(e.message || 'Approval failed.')
+  } finally {
+    approving.value = false
+  }
 }
 
 // Inline review panel component

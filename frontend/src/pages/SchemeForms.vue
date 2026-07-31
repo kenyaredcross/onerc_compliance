@@ -240,6 +240,73 @@
           </p>
         </div>
 
+        <!-- Section E: Data Subject Consent -->
+        <div>
+          <h3 class="section-title">Section E: Data Subject Consent (Jubilee Life Insurance Limited)</h3>
+
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 max-h-72 overflow-y-auto text-xs text-gray-600 leading-relaxed space-y-2 mb-3">
+            <p class="font-semibold text-gray-800">JUBILEE LIFE INSURANCE LIMITED CONSENT FORM FOR DATA SUBJECTS UNDER ADMINISTERED SCHEMES</p>
+            <p>Jubilee Life Insurance Ltd ("Jubilee Life/The Company/We/Us") respects the privacy and protects the personal and sensitive personal data of its prospective and existing clients and complies with the Data Protection Act, 2019 and the Data Protection Regulations.</p>
+            <p>The personal and sensitive data requested will be used for the provision of quotations, administration of, and/or other services relating to the retirement savings you are seeking to place with Jubilee Life or already have with us. All the information you have provided on this application (and any additional supporting pages) will only be used for lawful purposes and treated in accordance with the requirement of the Data Protection Act and its Regulations.</p>
+            <p>Your personal/sensitive personal data will be shared with our contracted third-party service providers (Data Processors and Sub-Processors) for the purpose of providing additional services related specifically to the pension account/service/retirement savings you are seeking or have in place with us. We may also be required to provide this information to Regulators, the Government or any other institution or organisation, for lawful or statutory purposes.</p>
+            <p>Personal and sensitive personal data may be transferred outside Kenya through cross border transfer of data, and in line with this, further consent is hereby sought from you for this purpose. Appropriate data protection safeguards will be put in place regarding the data transferred. Cross border transfer of personal and sensitive personal data refers to the transfer of such data outside Kenya for the performance or conclusion of a contract; implementation of pre-contractual measures at a data subject's request; or for any matter of public interest, or the establishment, exercise or defence of a legal claim, or the purpose of compelling legitimate interests pursued by the Data Controller or Data Processor which do not override the interests, rights and freedoms of the data subject. The transfer of data cross border may also occur in circumstances where Jubilee Life utilises the services of a third-party service provider with regard to the storage of personal data.</p>
+            <p>Under the conditions defined by the Data Protection Act 2019 and Data Protection Regulations, you have the right to:</p>
+            <ol class="list-[lower-roman] pl-5 space-y-1">
+              <li>Access your personal data and information on the processing; processing purposes, categories of personal data concerned, recipients to whom your personal data has been or will be communicated and the retention period. To find out how long we will keep your data, please refer to our Privacy Notice at <span class="font-semibold">https://jubileeinsurance.com/ke/privacy-policy/</span></li>
+              <li>Access, rectification and/or have your personal data erased.</li>
+              <li>Receive the personal data provided to Jubilee Life in a structured, commonly used and legible format; This shall be done free of charge by writing to the Data Protection Officer at: Jubilee Life Insurance Limited, Jubilee House, Wabera Street, Nairobi, Kenya, or by e-mailing <span class="font-semibold">privacy@jubileekenya.com</span></li>
+              <li>Object, for legitimate reasons, the processing and use of your personal data.</li>
+              <li>Request Jubilee Life Insurance to transfer your personal data to another Data Controller.</li>
+              <li>Lodge a complaint with Jubilee Life Insurance at <span class="font-semibold">privacy@jubileekenya.com</span></li>
+              <li>At any time, change your personal data and revoke your consent for the retention. You have the right to appoint a third party to whom your data may be communicated to after your death and you agree to inform the third party of their appointment.</li>
+              <li>Withdraw your consent to the processing activities at any time which may affect the services we provide to you or may stop us from being able to assist you.</li>
+            </ol>
+            <p>We reserve the right to not send you or delete your personal data in some circumstances - if we do, we will write to you stating out clearly, the reasons why, as detailed in Regulation 12(4) (b) and Regulation 12 (4) (e) of the Data Protection (General) Regulations, 2021.</p>
+            <p>We request your explicit consent for the processing of your personal and sensitive personal data as outlined above. Without this consent Jubilee Life will not be able to handle your data, provide the quote(s) or services you are seeking or already have in place with Jubilee Life Insurance Limited.</p>
+            <p>The consent below needs to be completed by you as the member of the scheme. This consent will be valid for the entire duration of your membership in the scheme, unless it is changed or revoked at any time. Where your membership requires provision of personal and sensitive personal data of a dependant(s) (spouse, child, sibling, parents), who are over 18 years of age, the consent signed below will be deemed to be specific consent that has been given on their behalf.</p>
+            <p>A parent or guardian should complete the consent for any member that is under the age of eighteen (18).</p>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <p class="text-sm font-medium text-gray-800 mb-1.5">
+                Processing of my personal and sensitive personal data as outlined above: <span class="required-asterisk">*</span>
+              </p>
+              <div class="flex gap-6">
+                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input type="radio" value="I Consent" v-model="state.data_consent" :disabled="!editable" />
+                  I consent
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input type="radio" value="I Do Not Consent" v-model="state.data_consent" :disabled="!editable" />
+                  I do not consent
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <p class="text-sm font-medium text-gray-800 mb-1.5">
+                Receiving marketing information regarding Jubilee Life and other Jubilee Insurance entities:
+              </p>
+              <p class="text-xs text-gray-500 mb-1.5">
+                From time to time, Jubilee Life would like to advise you on other products which may be of interest to you,
+                and to share your personal data with other Jubilee entities (Jubilee Health Insurance Limited, Jubilee
+                Financial Services Limited, and Jubilee Holdings Limited) to offer you other services and products.
+              </p>
+              <div class="flex gap-6">
+                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input type="radio" value="I Consent" v-model="state.marketing_consent" :disabled="!editable" />
+                  I consent
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input type="radio" value="I Do Not Consent" v-model="state.marketing_consent" :disabled="!editable" />
+                  I do not consent
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Actions -->
         <div v-if="editable" class="flex items-center gap-3 pt-2 border-t border-gray-100">
           <button type="button" class="btn-secondary" :disabled="saving" @click="save(false)">
@@ -289,6 +356,7 @@ const emptyState = () => ({
   bank_account_name: '', bank_name: '', bank_branch: '', bank_account_number: '',
   bank_town_city: '', bank_code: '', branch_code: '', swift_code: '', sort_or_iban_code: '',
   declaration_accepted: false, signed_at: '',
+  data_consent: '', marketing_consent: '',
   beneficiaries: [], guardians: [],
 })
 
@@ -302,7 +370,8 @@ const editable = computed(() => {
 
 const BANNERS = {
   Submitted: 'Your form has been submitted and is awaiting review. It can no longer be edited.',
-  Reviewed: 'Your form has been reviewed and accepted.',
+  Reviewed: 'Your form has been reviewed and is awaiting trustee approval.',
+  Approved: 'Your form has been approved by the scheme trustees.',
   Rejected: 'Your form was rejected.',
   Superseded: 'This form has been superseded by a newer submission.',
 }
@@ -424,6 +493,10 @@ async function save(submit) {
     }
     if (state.avc_amount && state.avc_percent) {
       toast.error('Additional Voluntary Contributions: fill either an amount or a percentage, not both.')
+      return
+    }
+    if (!state.data_consent) {
+      toast.error('Please answer the Data Subject Consent (I consent / I do not consent).')
       return
     }
   }

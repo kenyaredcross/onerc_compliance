@@ -50,6 +50,6 @@ after_migrate = [
 fixtures = [
 	{
 		"doctype": "Role",
-		"filters": {"name": "Compliance Officer"},
+		"filters": {"name": ["in", ["Compliance Officer", "Pension Trustee"]]},
 	}
 ]
