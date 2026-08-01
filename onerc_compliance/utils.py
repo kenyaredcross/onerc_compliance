@@ -5,6 +5,7 @@ import re
 
 import frappe
 from frappe import _
+from frappe.database.database import savepoint
 
 # Frappe rejects an attached_to_field containing any non-word character
 # (see frappe.database.schema.SPECIAL_CHAR_PATTERN). Compliance schema
@@ -70,6 +71,22 @@ def get_employee_snapshot_fields():
 	return fields
 
 
+def _find_submission(requirement_name, employee_name):
+	"""The existing submission for this pair, if any.
+
+	Ordered by creation so that where duplicates already exist every caller
+	resolves to the same, oldest row rather than an arbitrary one.
+	"""
+	rows = frappe.get_all(
+		"Compliance Submission",
+		filters={"requirement": requirement_name, "employee": employee_name},
+		fields=["name"],
+		order_by="creation asc, name asc",
+		limit=1,
+	)
+	return rows[0].name if rows else None
+
+
 def _get_employee_snapshot(employee_name):
 	data = frappe.db.get_value(
 		"Employee",
@@ -81,11 +98,7 @@ def _get_employee_snapshot(employee_name):
 
 
 def ensure_submission(requirement_name, employee_name):
-	existing = frappe.db.get_value(
-		"Compliance Submission",
-		{"requirement": requirement_name, "employee": employee_name},
-		"name",
-	)
+	existing = _find_submission(requirement_name, employee_name)
 	if existing:
 		return existing
 
@@ -106,6 +119,27 @@ def ensure_submission(requirement_name, employee_name):
 			"status": "Pending",
 		}
 	)
+	# The check above and this insert are not atomic. Activating a large
+	# requirement runs bulk_ensure_submissions in a background job while staff
+	# can simultaneously hit get_my_requirements, so two writers really do race
+	# here and both used to insert — leaving duplicate rows that then made the
+	# pair unsaveable. The savepoint keeps a lost race from rolling back the
+	# caller's transaction, since small requirements generate submissions inline
+	# inside the requirement's own save.
+	inserted = False
+	with savepoint(catch=Exception):
+		doc.insert(ignore_permissions=True)
+		inserted = True
+
+	if inserted:
+		return doc.name
+
+	existing = _find_submission(requirement_name, employee_name)
+	if existing:
+		return existing
+
+	# Not a race — re-run outside the savepoint so the real error surfaces
+	# instead of being swallowed.
 	doc.insert(ignore_permissions=True)
 	return doc.name
 

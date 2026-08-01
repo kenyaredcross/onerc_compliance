@@ -383,6 +383,124 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		self.assertEqual(departments, ["Accounts", "Marketing", "Unassigned"])
 
 	# ------------------------------------------------------------------
+	# Duplicate (requirement, employee) pairs
+	# ------------------------------------------------------------------
+
+	_UNIQUE_INDEX = "unique_requirement_employee"
+
+	def _drop_unique_index(self):
+		"""Temporarily lift the DB guard so a legacy duplicate can be planted.
+
+		Production sites that predate the fix still carry duplicate rows; the
+		point of these tests is that such a site can still be operated and
+		repaired. Returns True if the index was present and removed.
+		"""
+		try:
+			frappe.db.sql_ddl(
+				"ALTER TABLE `tabCompliance Submission` DROP INDEX `{0}`".format(self._UNIQUE_INDEX)
+			)
+			return True
+		except Exception:
+			return False
+
+	def _restore_unique_index(self):
+		try:
+			frappe.db.add_unique(
+				"Compliance Submission",
+				["requirement", "employee"],
+				constraint_name=self._UNIQUE_INDEX,
+			)
+		except Exception:
+			pass
+
+	def _plant_duplicate(self, source_name, status="Overdue"):
+		src = frappe.db.get_value(
+			"Compliance Submission", source_name,
+			["requirement", "employee", "employee_name"], as_dict=True,
+		)
+		dup = source_name + "-DUP"
+		frappe.db.sql(
+			"""INSERT INTO `tabCompliance Submission`
+			   (name, creation, modified, modified_by, owner, docstatus, idx,
+			    requirement, employee, employee_name, status, staff_type)
+			   VALUES (%s, NOW(), NOW(), 'Administrator', 'Administrator', 0, 0,
+			           %s, %s, %s, %s, 'Staff')""",
+			(dup, src.requirement, src.employee, src.employee_name or "", status),
+		)
+		return dup
+
+	def test_reopen_succeeds_despite_preexisting_duplicate(self):
+		"""A legacy duplicate must not block extending and reactivating.
+
+		The uniqueness check used to fire on every save of either row, so
+		_reset_overdue_submissions could not flip Overdue -> Pending and the whole
+		requirement save was rolled back.
+		"""
+		dept = self._make_empty_department()
+		emp = self._make_employee(suffix="dup-reopen")
+		req = self._make_scoped_requirement("_test-sub-req-dup-reopen", dept)
+		sub = self._make_submission(req.name, emp, status="Overdue")
+
+		had_index = self._drop_unique_index()
+		try:
+			dup = self._plant_duplicate(sub.name, status="Overdue")
+			self.assertEqual(
+				frappe.db.count("Compliance Submission",
+								{"requirement": req.name, "employee": emp}), 2
+			)
+
+			frappe.db.set_value("Compliance Requirement", req.name, "status", "Closed")
+			doc = frappe.get_doc("Compliance Requirement", req.name)
+			doc.deadline = "2099-12-31 23:59:00"
+			doc.status = "Active"
+			doc.save(ignore_permissions=True)  # must not raise
+
+			self.assertEqual(
+				frappe.db.get_value("Compliance Submission", sub.name, "status"), "Pending"
+			)
+			frappe.db.delete("Compliance Submission", {"name": dup})
+		finally:
+			if had_index:
+				self._restore_unique_index()
+
+	def test_duplicate_insert_still_blocked(self):
+		dept = self._make_empty_department()
+		emp = self._make_employee(suffix="dup-insert")
+		req = self._make_scoped_requirement("_test-sub-req-dup-insert", dept)
+		self._make_submission(req.name, emp)
+
+		with self.assertRaises(frappe.ValidationError):
+			self._make_submission(req.name, emp)
+
+	def test_repointing_onto_a_taken_pair_is_blocked(self):
+		"""Editing a submission to target a pair that already exists still throws."""
+		dept = self._make_empty_department()
+		emp_a = self._make_employee(suffix="dup-point-a")
+		emp_b = self._make_employee(suffix="dup-point-b")
+		req = self._make_scoped_requirement("_test-sub-req-dup-point", dept)
+		self._make_submission(req.name, emp_a)
+		sub_b = self._make_submission(req.name, emp_b)
+
+		sub_b.reload()
+		sub_b.employee = emp_a
+		with self.assertRaises(frappe.ValidationError):
+			sub_b.save(ignore_permissions=True)
+
+	def test_ensure_submission_returns_existing_instead_of_raising(self):
+		dept = self._make_empty_department()
+		emp = self._make_employee(suffix="dup-ensure")
+		req = self._make_scoped_requirement("_test-sub-req-dup-ensure", dept)
+
+		from onerc_compliance.utils import ensure_submission
+
+		first = ensure_submission(req.name, emp)
+		second = ensure_submission(req.name, emp)
+		self.assertEqual(first, second)
+		self.assertEqual(
+			frappe.db.count("Compliance Submission", {"requirement": req.name, "employee": emp}), 1
+		)
+
+	# ------------------------------------------------------------------
 	# staff_scope — the dashboard defaults to staff only
 	# ------------------------------------------------------------------
 

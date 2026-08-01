@@ -50,6 +50,16 @@ class ComplianceSubmission(Document):
 					)
 				)
 		else:
+			# Only guard against an edit that *moves* this submission onto a pair
+			# that is already taken. A duplicate that predates this save is not
+			# something the current edit created, and throwing here would make the
+			# affected rows permanently unsaveable — including the Overdue -> Pending
+			# reset that reopening a requirement performs, and any attempt to clean
+			# the duplicates up.
+			previous = self.get_doc_before_save()
+			if previous and previous.requirement == self.requirement and previous.employee == self.employee:
+				return
+
 			existing = frappe.db.get_value(
 				"Compliance Submission",
 				{
