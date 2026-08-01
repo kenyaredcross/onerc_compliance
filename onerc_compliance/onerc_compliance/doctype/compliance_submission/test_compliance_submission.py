@@ -386,33 +386,6 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 	# Duplicate (requirement, employee) pairs
 	# ------------------------------------------------------------------
 
-	_UNIQUE_INDEX = "unique_requirement_employee"
-
-	def _drop_unique_index(self):
-		"""Temporarily lift the DB guard so a legacy duplicate can be planted.
-
-		Production sites that predate the fix still carry duplicate rows; the
-		point of these tests is that such a site can still be operated and
-		repaired. Returns True if the index was present and removed.
-		"""
-		try:
-			frappe.db.sql_ddl(
-				"ALTER TABLE `tabCompliance Submission` DROP INDEX `{0}`".format(self._UNIQUE_INDEX)
-			)
-			return True
-		except Exception:
-			return False
-
-	def _restore_unique_index(self):
-		try:
-			frappe.db.add_unique(
-				"Compliance Submission",
-				["requirement", "employee"],
-				constraint_name=self._UNIQUE_INDEX,
-			)
-		except Exception:
-			pass
-
 	def _plant_duplicate(self, source_name, status="Overdue"):
 		src = frappe.db.get_value(
 			"Compliance Submission", source_name,
@@ -441,27 +414,101 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		req = self._make_scoped_requirement("_test-sub-req-dup-reopen", dept)
 		sub = self._make_submission(req.name, emp, status="Overdue")
 
-		had_index = self._drop_unique_index()
-		try:
-			dup = self._plant_duplicate(sub.name, status="Overdue")
-			self.assertEqual(
-				frappe.db.count("Compliance Submission",
-								{"requirement": req.name, "employee": emp}), 2
-			)
+		dup = self._plant_duplicate(sub.name, status="Overdue")
+		self.assertEqual(
+			frappe.db.count("Compliance Submission",
+							{"requirement": req.name, "employee": emp}), 2
+		)
 
-			frappe.db.set_value("Compliance Requirement", req.name, "status", "Closed")
-			doc = frappe.get_doc("Compliance Requirement", req.name)
-			doc.deadline = "2099-12-31 23:59:00"
-			doc.status = "Active"
-			doc.save(ignore_permissions=True)  # must not raise
+		frappe.db.set_value("Compliance Requirement", req.name, "status", "Closed")
+		doc = frappe.get_doc("Compliance Requirement", req.name)
+		doc.deadline = "2099-12-31 23:59:00"
+		doc.status = "Active"
+		doc.save(ignore_permissions=True)  # must not raise
 
-			self.assertEqual(
-				frappe.db.get_value("Compliance Submission", sub.name, "status"), "Pending"
-			)
-			frappe.db.delete("Compliance Submission", {"name": dup})
-		finally:
-			if had_index:
-				self._restore_unique_index()
+		self.assertEqual(
+			frappe.db.get_value("Compliance Submission", sub.name, "status"), "Pending"
+		)
+		# Both rows survive — nothing here removes data.
+		self.assertEqual(
+			frappe.db.count("Compliance Submission",
+							{"requirement": req.name, "employee": emp}), 2
+		)
+		frappe.db.delete("Compliance Submission", {"name": dup})
+
+	def test_cleanup_never_deletes_a_row_holding_data(self):
+		"""The duplicate tool must not destroy submitted work.
+
+		Guards the specific trap: the surviving row is chosen by what it holds,
+		not by how far along its status is. A Reviewed-but-empty row must never
+		win over a Pending row carrying the employee's answers.
+		"""
+		dept = self._make_empty_department()
+		emp = self._make_employee(suffix="dup-safe")
+		req = self._make_scoped_requirement("_test-sub-req-dup-safe", dept)
+
+		# Empty but Reviewed — the status the old scoring would have preferred.
+		empty = self._make_submission(req.name, emp, status="Reviewed")
+		# Pending, but holds the actual answer.
+		full = self._plant_duplicate(empty.name, status="Pending")
+		frappe.get_doc({
+			"doctype": "Compliance Submission Value",
+			"parenttype": "Compliance Submission",
+			"parentfield": "values",
+			"parent": full,
+			"field_name": "declaration",
+			"field_label": "Declaration",
+			"field_type": "Data",
+			"value": "I agree",
+		}).insert(ignore_permissions=True)
+		frappe.db.commit()
+
+		from onerc_compliance.duplicate_submissions import cleanup_duplicate_submissions
+
+		# Dry run must change nothing at all.
+		cleanup_duplicate_submissions(dry_run=True)
+		self.assertTrue(frappe.db.exists("Compliance Submission", full))
+		self.assertTrue(frappe.db.exists("Compliance Submission", empty.name))
+
+		# Applied: the row holding the answer survives; the empty one may go.
+		cleanup_duplicate_submissions(dry_run=False)
+		self.assertTrue(
+			frappe.db.exists("Compliance Submission", full),
+			"The row holding the employee's answer must never be deleted",
+		)
+
+		frappe.db.delete("Compliance Submission Value", {"parent": full})
+		frappe.db.delete("Compliance Submission", {"name": full})
+
+	def test_cleanup_skips_groups_where_two_rows_hold_data(self):
+		"""When both duplicates carry work, the tool refuses and reports."""
+		dept = self._make_empty_department()
+		emp = self._make_employee(suffix="dup-both")
+		req = self._make_scoped_requirement("_test-sub-req-dup-both", dept)
+
+		first = self._make_submission(req.name, emp, status="Submitted")
+		frappe.db.set_value("Compliance Submission", first.name, "submitted_on",
+							"2026-01-01 00:00:00", update_modified=False)
+		second = self._plant_duplicate(first.name, status="Submitted")
+		frappe.db.sql(
+			"UPDATE `tabCompliance Submission` SET submitted_on = %s WHERE name = %s",
+			("2026-02-01 00:00:00", second),
+		)
+		frappe.db.commit()
+
+		from onerc_compliance.duplicate_submissions import cleanup_duplicate_submissions
+
+		summary = cleanup_duplicate_submissions(dry_run=False)
+
+		self.assertEqual(summary["removed"], 0)
+		self.assertTrue(frappe.db.exists("Compliance Submission", first.name))
+		self.assertTrue(frappe.db.exists("Compliance Submission", second))
+		self.assertTrue(
+			any(s["employee"] == emp for s in summary["skipped_groups"]),
+			"Group with two data-holding rows must be reported for manual review",
+		)
+
+		frappe.db.delete("Compliance Submission", {"name": second})
 
 	def test_duplicate_insert_still_blocked(self):
 		dept = self._make_empty_department()

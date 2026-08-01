@@ -7,4 +7,3 @@ onerc_compliance.patches.v1_0.rename_ict_incident_doctypes
 # Patches added in this section will be executed after doctypes are migrated
 onerc_compliance.patches.v1_0.link_existing_files
 onerc_compliance.patches.v1_0.backfill_hr_departments
-onerc_compliance.patches.v1_0.dedupe_compliance_submissions
