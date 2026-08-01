@@ -20,6 +20,28 @@
             {{ r.title }}
           </option>
         </select>
+        <!-- Staff scope — governs the whole page: headline numbers, the
+             department breakdown and the submissions list all follow it. -->
+        <div
+          v-if="selectedRequirement"
+          class="inline-flex rounded-lg bg-gray-100 p-0.5"
+          role="group"
+          aria-label="Staff scope"
+        >
+          <button
+            v-for="opt in staffScopeOptions"
+            :key="opt.value"
+            type="button"
+            :aria-pressed="staffScope === opt.value"
+            :class="[
+              'px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-150',
+              staffScope === opt.value
+                ? 'bg-white text-navy shadow-sm'
+                : 'text-gray-500 hover:text-gray-700',
+            ]"
+            @click="setStaffScope(opt.value)"
+          >{{ opt.label }}</button>
+        </div>
         <button
           v-if="selectedRequirement"
           class="btn-secondary text-sm"
@@ -27,6 +49,13 @@
           :disabled="dashLoading"
         >Refresh</button>
       </div>
+      <p v-if="selectedRequirement" class="text-xs text-gray-400 mt-2">
+        {{
+          staffScope === 'Staff'
+            ? 'Showing staff only. Volunteers and other non-staff are excluded.'
+            : 'Showing everyone, including volunteers and other non-staff.'
+        }}
+      </p>
       <p v-if="reqListError" class="text-xs text-error mt-2">{{ reqListError }}</p>
     </div>
 
@@ -54,7 +83,8 @@
             />
           </div>
           <p class="text-xs text-gray-400 mt-1.5">
-            {{ dashboard.reviewed_count }} reviewed out of {{ dashboard.expected_headcount || dashboard.known_total }} expected
+            {{ dashboard.reviewed_count }} reviewed out of {{ completionDenominator }}
+            {{ staffScope === 'Staff' ? 'staff submissions' : 'expected' }}
           </p>
         </div>
 
@@ -342,6 +372,15 @@ const statusFilter = ref('')
 const searchTerm = ref('')
 const departmentFilter = ref('')
 
+// Page-level scope, not a filter: it defaults to "Staff" rather than "no
+// selection", so it is deliberately left out of hasActiveFilters/clearFilters
+// and survives a requirement change.
+const staffScope = ref('Staff')
+const staffScopeOptions = [
+  { value: 'Staff', label: 'Staff only' },
+  { value: 'All', label: 'All' },
+]
+
 const page = ref(1)
 const pageLength = 50
 const totalCount = ref(0)
@@ -352,6 +391,15 @@ const dashboard = ref(null)
 const submissions = ref([])
 
 const departmentOptions = computed(() => dashboard.value?.departments || [])
+// Mirrors the backend: expected_headcount describes the whole requirement, so
+// it is only a meaningful denominator when every employee is in scope.
+const completionDenominator = computed(() => {
+  const d = dashboard.value
+  if (!d) return 0
+  return staffScope.value === 'All' && d.expected_headcount
+    ? d.expected_headcount
+    : d.known_total
+})
 const totalPages = computed(() => Math.max(1, Math.ceil(totalCount.value / pageLength)))
 const hasActiveFilters = computed(
   () => !!(searchTerm.value.trim() || departmentFilter.value || statusFilter.value)
@@ -418,6 +466,17 @@ function onFilterChange() {
   loadSubmissions()
 }
 
+// Scope change reloads the dashboard too — the headline numbers and the
+// department breakdown are scoped, not just the list. The department filter is
+// cleared because the available departments differ between the two scopes.
+function setStaffScope(value) {
+  if (staffScope.value === value) return
+  staffScope.value = value
+  departmentFilter.value = ''
+  page.value = 1
+  refresh()
+}
+
 function clearFilters() {
   resetFilterState()
   loadSubmissions()
@@ -438,6 +497,7 @@ async function loadDashboard() {
   try {
     const result = await call('onerc_compliance.api.v1.compliance.get_dashboard', {
       requirement: selectedRequirement.value,
+      staff_scope: staffScope.value,
     })
     dashboard.value = result?.data || null
   } catch (e) {
@@ -452,6 +512,7 @@ async function loadSubmissions() {
   try {
     const args = {
       requirement: selectedRequirement.value,
+      staff_scope: staffScope.value,
       page: page.value,
       page_length: pageLength,
     }

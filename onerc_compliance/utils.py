@@ -54,6 +54,32 @@ def get_in_scope_employees(requirement):
 	return result
 
 
+#: Employee columns copied onto a submission when it is created. The last two
+#: are custom fields owned by the krcs_onesource roster sync and are requested
+#: only when that app has installed them, so this app still works standalone.
+_BASE_SNAPSHOT_FIELDS = ["employee_name", "department", "designation"]
+_SYNCED_SNAPSHOT_FIELDS = ["hr_departments", "staff_type"]
+
+
+def get_employee_snapshot_fields():
+	meta = frappe.get_meta("Employee")
+	fields = list(_BASE_SNAPSHOT_FIELDS)
+	for fieldname in _SYNCED_SNAPSHOT_FIELDS:
+		if meta.get_field(fieldname):
+			fields.append(fieldname)
+	return fields
+
+
+def _get_employee_snapshot(employee_name):
+	data = frappe.db.get_value(
+		"Employee",
+		employee_name,
+		get_employee_snapshot_fields(),
+		as_dict=True,
+	)
+	return data or {}
+
+
 def ensure_submission(requirement_name, employee_name):
 	existing = frappe.db.get_value(
 		"Compliance Submission",
@@ -63,20 +89,20 @@ def ensure_submission(requirement_name, employee_name):
 	if existing:
 		return existing
 
-	emp_data = frappe.db.get_value(
-		"Employee",
-		employee_name,
-		["employee_name", "department", "designation"],
-		as_dict=True,
-	)
+	emp_data = _get_employee_snapshot(employee_name)
 	doc = frappe.get_doc(
 		{
 			"doctype": "Compliance Submission",
 			"requirement": requirement_name,
 			"employee": employee_name,
-			"employee_name": (emp_data.get("employee_name") or "") if emp_data else "",
-			"department": (emp_data.get("department") or "") if emp_data else "",
-			"designation": (emp_data.get("designation") or "") if emp_data else "",
+			"employee_name": emp_data.get("employee_name") or "",
+			"department": emp_data.get("department") or "",
+			"designation": emp_data.get("designation") or "",
+			# Snapshotted alongside department so the dashboard can group by the
+			# raw Business Central code and default to staff-only without
+			# joining back to Employee on every read.
+			"hr_departments": emp_data.get("hr_departments") or "",
+			"staff_type": emp_data.get("staff_type") or "",
 			"status": "Pending",
 		}
 	)

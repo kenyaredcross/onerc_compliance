@@ -43,10 +43,14 @@ doc_events = {
 	},
 }
 
-after_install = "onerc_compliance.onerc_incident_management.install.setup_itsm"
+after_install = [
+	"onerc_compliance.onerc_incident_management.install.setup_itsm",
+	"onerc_compliance.setup.ensure_compliance_custom_fields",
+]
 
 after_migrate = [
 	"onerc_compliance.onerc_incident_management.setup.ensure_helpdesk_link_field",
+	"onerc_compliance.setup.ensure_compliance_custom_fields",
 ]
 
 fixtures = [

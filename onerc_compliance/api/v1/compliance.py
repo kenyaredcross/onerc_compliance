@@ -190,8 +190,48 @@ def review_submission(submission, action, remarks=None):
 	return _ok({"submission": sub.name, "status": sub.status})
 
 
+#: The submission column the dashboard groups and filters by: the raw
+#: HRDepartments code snapshotted from the Employee. The `department` Link is
+#: kept on the doc for reference but is no longer the reporting dimension.
+DEPARTMENT_FIELD = "hr_departments"
+
+#: Sentinel used by the frontend for submissions with no HRDepartments code.
+UNASSIGNED = "Unassigned"
+
+
+def normalize_staff_scope(staff_scope):
+	"""Coerce the staff_scope param to "Staff" (the default) or "All"."""
+	scope = (staff_scope or "").strip() or "Staff"
+	return scope if scope in ("Staff", "All") else "Staff"
+
+
+def _apply_scope_filters(filters, department, staff_scope):
+	"""Add the department and staff-scope conditions shared by both endpoints."""
+	if department:
+		if department == UNASSIGNED:
+			# "not set" resolves to the column being NULL or ''.
+			filters.append([DEPARTMENT_FIELD, "is", "not set"])
+		else:
+			filters.append([DEPARTMENT_FIELD, "=", department])
+
+	# Staff-only is the default view: volunteers and other non-staff are
+	# excluded unless the caller explicitly asks for "All".
+	if staff_scope == "Staff":
+		filters.append(["staff_type", "=", "Staff"])
+
+	return filters
+
+
 @frappe.whitelist()
-def get_submissions(requirement, status=None, search=None, department=None, page=1, page_length=50):
+def get_submissions(
+	requirement,
+	status=None,
+	search=None,
+	department=None,
+	staff_scope="Staff",
+	page=1,
+	page_length=50,
+):
 	# Requires write on Compliance Submission — employees are read-only and must be denied.
 	frappe.has_permission("Compliance Submission", ptype="write", throw=True)
 
@@ -200,16 +240,14 @@ def get_submissions(requirement, status=None, search=None, department=None, page
 	if page_length <= 0:
 		page_length = 50
 
-	# AND filters — requirement, status and department all narrow the set together.
+	staff_scope = normalize_staff_scope(staff_scope)
+
+	# AND filters — requirement, status, department and staff scope all narrow
+	# the set together.
 	filters = [["requirement", "=", requirement]]
 	if status:
 		filters.append(["status", "=", status])
-	if department:
-		if department == "Unassigned":
-			# "not set" resolves to department IS NULL OR department = ''.
-			filters.append(["department", "is", "not set"])
-		else:
-			filters.append(["department", "=", department])
+	_apply_scope_filters(filters, department, staff_scope)
 
 	# OR group — a search term matches either the display name or the employee ID.
 	# Frappe builds the WHERE clause as `(filters ANDed) AND (or_filters ORed)`, so
@@ -238,7 +276,15 @@ def get_submissions(requirement, status=None, search=None, department=None, page
 		"Compliance Submission",
 		filters=filters,
 		or_filters=or_filters,
-		fields=["name", "employee_name", "department", "status", "submitted_on"],
+		fields=[
+			"name",
+			"employee_name",
+			"department",
+			DEPARTMENT_FIELD,
+			"staff_type",
+			"status",
+			"submitted_on",
+		],
 		order_by="employee_name asc, name asc",
 		limit=page_length,
 		offset=(page - 1) * page_length,
@@ -278,7 +324,12 @@ def get_submissions(requirement, status=None, search=None, department=None, page
 		result.append({
 			"name": row.name,
 			"employee_name": sub_doc.employee_name or "",
-			"department": sub_doc.department or "",
+			# "department" carries the HRDepartments code — the dimension the
+			# dashboard groups by. The ERPNext Department link is exposed
+			# separately for reference.
+			"department": row.get(DEPARTMENT_FIELD) or "",
+			"erp_department": sub_doc.department or "",
+			"staff_type": row.get("staff_type") or "",
 			"status": row.status,
 			"submitted_on": str(sub_doc.submitted_on) if sub_doc.submitted_on else None,
 			"field_schema": field_schema,
@@ -291,21 +342,29 @@ def get_submissions(requirement, status=None, search=None, department=None, page
 		"page": page,
 		"page_length": page_length,
 		"returned": len(result),
+		"staff_scope": staff_scope,
 	}
 	return _ok(result, meta=meta)
 
 
 @frappe.whitelist()
-def get_dashboard(requirement):
+def get_dashboard(requirement, staff_scope="Staff"):
 	# Requires write on Compliance Submission — same gate as get_submissions and review_submission.
 	frappe.has_permission("Compliance Submission", ptype="write", throw=True)
 
+	staff_scope = normalize_staff_scope(staff_scope)
+
 	req_doc = frappe.get_doc("Compliance Requirement", requirement)
+
+	# The scope applies to the headline numbers and the department breakdown
+	# alike, so every figure on the dashboard describes the same population.
+	filters = [["requirement", "=", requirement]]
+	_apply_scope_filters(filters, None, staff_scope)
 
 	submissions = frappe.get_all(
 		"Compliance Submission",
-		filters={"requirement": requirement},
-		fields=["name", "status", "department"],
+		filters=filters,
+		fields=["name", "status", DEPARTMENT_FIELD],
 	)
 
 	status_counts = {}
@@ -314,7 +373,8 @@ def get_dashboard(requirement):
 	for sub in submissions:
 		status_counts[sub.status] = status_counts.get(sub.status, 0) + 1
 
-		dept = sub.department or "Unassigned"
+		# Grouped by the raw HRDepartments code pulled from Business Central.
+		dept = sub.get(DEPARTMENT_FIELD) or UNASSIGNED
 		if dept not in dept_map:
 			dept_map[dept] = {"department": dept, "reviewed": 0, "total": 0}
 		dept_map[dept]["total"] += 1
@@ -324,17 +384,20 @@ def get_dashboard(requirement):
 	# Distinct departments actually present on this requirement's submissions, so the
 	# frontend dropdown lists real values (plus an "Unassigned" bucket) rather than
 	# every Department in the system. "Unassigned" is appended last if any exist.
-	real_depts = sorted(d for d in dept_map if d != "Unassigned")
-	departments = real_depts + (["Unassigned"] if "Unassigned" in dept_map else [])
+	real_depts = sorted(d for d in dept_map if d != UNASSIGNED)
+	departments = real_depts + ([UNASSIGNED] if UNASSIGNED in dept_map else [])
 
 	reviewed_count = status_counts.get("Reviewed", 0)
 	known_total = len(submissions)
+	# expected_headcount describes the whole requirement, so it is only a
+	# meaningful denominator when every employee is in scope.
 	expected = req_doc.expected_headcount or 0
-	denominator = expected if expected else known_total
+	denominator = expected if (expected and staff_scope == "All") else known_total
 	completion_percent = round((reviewed_count / denominator) * 100, 2) if denominator else 0.0
 
 	return _ok({
 		"requirement": requirement,
+		"staff_scope": staff_scope,
 		"status_counts": status_counts,
 		"by_department": list(dept_map.values()),
 		"departments": departments,

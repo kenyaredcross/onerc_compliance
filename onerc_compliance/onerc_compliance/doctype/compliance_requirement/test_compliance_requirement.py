@@ -161,3 +161,143 @@ class IntegrationTestComplianceRequirement(IntegrationTestCase):
 		doc.status = "Active"
 		with self.assertRaises(frappe.ValidationError):
 			doc.save(ignore_permissions=True)
+
+	# ------------------------------------------------------------------
+	# Deadline edits — must never be blocked while the schema is unchanged
+	# ------------------------------------------------------------------
+
+	def _submission_snapshot(self, requirement_name):
+		"""(name, status, modified) for every submission, to prove none were touched."""
+		rows = frappe.get_all(
+			"Compliance Submission",
+			filters={"requirement": requirement_name},
+			fields=["name", "status", "modified"],
+			order_by="name",
+		)
+		return [(r.name, r.status, str(r.modified)) for r in rows]
+
+	def test_active_requirement_deadline_can_be_extended(self):
+		"""Extending an Active requirement's deadline saves cleanly and leaves
+		its submissions completely untouched."""
+		self._make_test_employee()
+		req = self._make_requirement(
+			title="_test-req-extend",
+			status="Active",
+			fields=[{"label": "Agree", "fieldtype": "Check", "mandatory": 0}],
+		)
+
+		before = self._submission_snapshot(req.name)
+		self.assertTrue(before, "Expected at least one auto-generated submission")
+
+		req.reload()
+		req.deadline = "2098-06-30 23:59:00"
+		req.save(ignore_permissions=True)
+
+		self.assertEqual(
+			frappe.db.get_value("Compliance Requirement", req.name, "deadline").strftime(
+				"%Y-%m-%d %H:%M:%S"
+			),
+			"2098-06-30 23:59:00",
+		)
+		self.assertEqual(
+			self._submission_snapshot(req.name),
+			before,
+			"Extending the deadline must not create, delete or modify any submission",
+		)
+
+	def test_closed_requirement_deadline_can_be_extended(self):
+		"""The same holds while the requirement is Closed."""
+		self._make_test_employee()
+		req = self._make_requirement(
+			title="_test-req-extend-closed",
+			status="Active",
+			fields=[{"label": "Agree", "fieldtype": "Check", "mandatory": 0}],
+		)
+		frappe.db.set_value("Compliance Requirement", req.name, "status", "Closed")
+		before = self._submission_snapshot(req.name)
+
+		req.reload()
+		req.deadline = "2098-06-30 23:59:00"
+		req.save(ignore_permissions=True)
+
+		self.assertEqual(self._submission_snapshot(req.name), before)
+
+	def test_deadline_edit_survives_blank_stored_fieldname(self):
+		"""A legacy row with no fieldname must not be mistaken for a schema edit.
+
+		`_validate_fields` fills the fieldname in from the label on every save, so
+		comparing the raw column would flag a save that changed only the deadline.
+		"""
+		req = self._make_requirement(
+			title="_test-req-blank-fieldname",
+			status="Active",
+			fields=[{"label": "Agree Here", "fieldtype": "Check", "mandatory": 0}],
+		)
+		frappe.db.set_value(
+			"Compliance Requirement Field", req.fields[0].name, "fieldname", ""
+		)
+
+		req.reload()
+		req.deadline = "2098-06-30 23:59:00"
+		req.save(ignore_permissions=True)  # must not raise
+
+	def test_deadline_edit_survives_select_options_whitespace(self):
+		"""A trailing newline round-tripped by the Desk textarea is not a schema edit."""
+		req = self._make_requirement(
+			title="_test-req-opts-ws",
+			status="Active",
+			fields=[{
+				"label": "Pick",
+				"fieldtype": "Select",
+				"options": "A\nB",
+				"mandatory": 0,
+			}],
+		)
+		frappe.db.set_value(
+			"Compliance Requirement Field", req.fields[0].name, "options", "A\nB\n"
+		)
+
+		req.reload()
+		req.fields[0].options = "A\nB"
+		req.deadline = "2098-06-30 23:59:00"
+		req.save(ignore_permissions=True)  # must not raise
+
+	def test_deadline_edit_survives_stored_select_without_options(self):
+		"""Pre-existing invalid data must not block an unrelated deadline edit."""
+		req = self._make_requirement(
+			title="_test-req-opts-blank",
+			status="Active",
+			fields=[{
+				"label": "Pick",
+				"fieldtype": "Select",
+				"options": "A\nB",
+				"mandatory": 0,
+			}],
+		)
+		frappe.db.set_value(
+			"Compliance Requirement Field", req.fields[0].name, "options", ""
+		)
+
+		req.reload()
+		req.deadline = "2098-06-30 23:59:00"
+		req.save(ignore_permissions=True)  # must not raise
+
+	def test_schema_freeze_still_blocks_reorder_when_active(self):
+		"""The freeze is not weakened: reordering fields remains a schema change."""
+		req = self._make_requirement(
+			title="_test-req-reorder",
+			status="Active",
+			fields=[
+				{"label": "Alpha", "fieldtype": "Data", "mandatory": 0},
+				{"label": "Beta", "fieldtype": "Data", "mandatory": 0},
+			],
+		)
+
+		req.reload()
+		req.fields.reverse()
+		for idx, row in enumerate(req.fields):
+			row.idx = idx + 1
+		req.deadline = "2098-06-30 23:59:00"
+
+		with self.assertRaises(frappe.ValidationError):
+			req.save(ignore_permissions=True)

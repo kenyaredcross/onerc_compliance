@@ -17,6 +17,7 @@ class ComplianceRequirement(Document):
 		else:
 			self._prev_status = "Draft"
 
+		self._load_stored_fields()
 		self._validate_fields()
 		self._validate_targeting()
 		self._validate_deadline_not_past()
@@ -39,9 +40,41 @@ class ComplianceRequirement(Document):
 	# Helpers
 	# ------------------------------------------------------------------
 
+	def _load_stored_fields(self):
+		"""Snapshot the field rows as they currently stand in the DB.
+
+		Read once, before `_validate_fields` mutates `self.fields`, so both the
+		schema-freeze check and the per-row content checks can tell an untouched
+		row apart from one the officer actually edited. Without this, editing a
+		non-schema field (typically the deadline) on an Active requirement could
+		be rejected because validation had rewritten a row a moment earlier.
+		"""
+		self._stored_field_rows = []
+		self._stored_fields_by_name = {}
+		if self.is_new():
+			return
+
+		old_doc = frappe.get_doc("Compliance Requirement", self.name)
+		self._stored_field_rows = list(old_doc.fields)
+		for row in old_doc.fields:
+			self._stored_fields_by_name[row.name] = row
+
+	def _row_is_untouched(self, row):
+		"""True when this row is byte-for-byte the schema already stored."""
+		stored = self._stored_fields_by_name.get(row.name)
+		if stored is None:
+			return False
+		return self._row_signature(stored) == self._row_signature(row)
+
 	def _validate_fields(self):
 		seen_names = {}
 		for row in self.fields:
+			# A pre-existing row the officer did not touch is left alone. Legacy
+			# rows can carry a blank fieldname or a Select with no Options; those
+			# must not block an unrelated edit such as extending the deadline.
+			# Any row that is new or genuinely changed is still fully validated.
+			untouched = self._row_is_untouched(row)
+
 			if not row.label:
 				frappe.throw(_("Every field row must have a label."))
 
@@ -55,6 +88,9 @@ class ComplianceRequirement(Document):
 				row.fieldname = f"{base}_{count}"
 			else:
 				seen_names[base] = 1
+
+			if untouched:
+				continue
 
 			if row.fieldtype == "Select" and not (row.options or "").strip():
 				frappe.throw(
@@ -92,17 +128,49 @@ class ComplianceRequirement(Document):
 					_("At least one target department is required for 'By Department' targeting.")
 				)
 
-	def _make_fields_signature(self, fields):
-		result = []
-		for row in fields:
-			result.append((
-				row.fieldname or "",
-				row.fieldtype or "",
-				row.label or "",
-				row.options or "",
-				int(row.mandatory or 0),
-			))
-		return result
+	@staticmethod
+	def _resolved_fieldname(row):
+		"""The fieldname this row settles on once `_validate_fields` has run.
+
+		A stored row may have a blank fieldname (legacy or imported data).
+		Validation fills it in from the label, so comparing the raw column would
+		report a schema change on a save that touched nothing. Resolving both
+		sides the same way makes the comparison invariant to that rewrite.
+		"""
+		fieldname = (row.fieldname or "").strip()
+		if fieldname:
+			return fieldname
+		return frappe.scrub(row.label or "")
+
+	@staticmethod
+	def _normalize_options(options):
+		"""Collapse Select options to their meaningful lines.
+
+		The Desk textarea round-trips trailing newlines and stray indentation, so
+		"A\nB\n" and "A\nB" describe the same choice list and must compare equal.
+		"""
+		lines = []
+		for line in (options or "").splitlines():
+			line = line.strip()
+			if line:
+				lines.append(line)
+		return "\n".join(lines)
+
+	def _row_signature(self, row):
+		"""The parts of a field row that actually constitute the schema.
+
+		`description` is deliberately excluded (it is presentational), as are
+		bookkeeping columns like name/idx/modified. Label whitespace and Select
+		option whitespace are normalized so cosmetic round-tripping is not
+		mistaken for a schema edit.
+		"""
+		return (
+			self._resolved_fieldname(row),
+			(row.fieldtype or "").strip(),
+			" ".join((row.label or "").split()),
+			self._normalize_options(row.options),
+			int(row.mandatory or 0),
+		)
 
 	def _validate_schema_freeze(self):
 		if self.is_new():
@@ -110,9 +178,12 @@ class ComplianceRequirement(Document):
 		if self._prev_status not in ("Active", "Closed"):
 			return
 
-		old_doc = frappe.get_doc("Compliance Requirement", self.name)
-		old_sig = self._make_fields_signature(old_doc.fields)
-		new_sig = self._make_fields_signature(self.fields)
+		# Ordered comparison: adding, removing, editing *or reordering* a field is
+		# a schema change and stays blocked (ADR-001). Only cosmetic differences
+		# that do not alter the schema are tolerated, so that editing the deadline
+		# or any other non-schema field always saves cleanly.
+		old_sig = [self._row_signature(row) for row in self._stored_field_rows]
+		new_sig = [self._row_signature(row) for row in self.fields]
 
 		if old_sig != new_sig:
 			frappe.throw(

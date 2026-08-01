@@ -93,7 +93,9 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		doc.insert(ignore_permissions=True)
 		return doc
 
-	def _make_employee(self, suffix="sub-test"):
+	def _make_employee(self, suffix="sub-test", staff_type="Staff", hr_departments=None):
+		"""Create a test Employee. Defaults to staff, matching the roster sync's
+		rule that an EMP-prefixed employee number means a permanent staff member."""
 		first_name = f"_test-emp-{suffix}"
 		existing = frappe.db.get_value("Employee", {"first_name": first_name}, "name")
 		if existing:
@@ -107,12 +109,21 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 			"date_of_birth": "1990-01-01",
 			"date_of_joining": "2020-01-01",
 			"company": "United Nations",
+			"employee_number": ("EMP-" if staff_type == "Staff" else "VOL-") + suffix,
+			"staff_type": staff_type,
+			"hr_departments": hr_departments or "",
 		})
 		emp.insert(ignore_permissions=True)
 		return emp.name
 
 	def _make_submission(
-		self, requirement_name, employee_name, status="Pending", display_name=None, department=None
+		self,
+		requirement_name,
+		employee_name,
+		status="Pending",
+		display_name=None,
+		hr_departments=None,
+		staff_type="Staff",
 	):
 		doc = frappe.get_doc({
 			"doctype": "Compliance Submission",
@@ -124,8 +135,11 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		# search tests have a deterministic display name to match against.
 		if display_name is not None:
 			doc.employee_name = display_name
-		if department is not None:
-			doc.department = department
+		# These two are normally snapshotted from the Employee by
+		# ensure_submission; set them directly since this builds the doc by hand.
+		if hr_departments is not None:
+			doc.hr_departments = hr_departments
+		doc.staff_type = staff_type
 		doc.insert(ignore_permissions=True)
 		return doc
 
@@ -275,8 +289,8 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		emp_a = self._make_employee(suffix="dept-a")
 		emp_b = self._make_employee(suffix="dept-b")
 		emp_c = self._make_employee(suffix="dept-c")
-		self._make_submission(req.name, emp_a, display_name="A", department="Accounts")
-		self._make_submission(req.name, emp_b, display_name="B", department="Marketing")
+		self._make_submission(req.name, emp_a, display_name="A", hr_departments="Accounts")
+		self._make_submission(req.name, emp_b, display_name="B", hr_departments="Marketing")
 		# emp_c: no department -> Unassigned
 		self._make_submission(req.name, emp_c, display_name="C")
 
@@ -304,13 +318,13 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		emp_c = self._make_employee(suffix="combine-c")
 		# Same department, differing status + name.
 		self._make_submission(
-			req.name, emp_a, status="Overdue", display_name="Kamau One", department="Accounts"
+			req.name, emp_a, status="Overdue", display_name="Kamau One", hr_departments="Accounts"
 		)
 		self._make_submission(
-			req.name, emp_b, status="Pending", display_name="Kamau Two", department="Accounts"
+			req.name, emp_b, status="Pending", display_name="Kamau Two", hr_departments="Accounts"
 		)
 		self._make_submission(
-			req.name, emp_c, status="Overdue", display_name="Wanjiru Three", department="Marketing"
+			req.name, emp_c, status="Overdue", display_name="Wanjiru Three", hr_departments="Marketing"
 		)
 
 		from onerc_compliance.api.v1.compliance import get_submissions
@@ -357,8 +371,8 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		emp_a = self._make_employee(suffix="dash-a")
 		emp_b = self._make_employee(suffix="dash-b")
 		emp_c = self._make_employee(suffix="dash-c")
-		self._make_submission(req.name, emp_a, display_name="A", department="Marketing")
-		self._make_submission(req.name, emp_b, display_name="B", department="Accounts")
+		self._make_submission(req.name, emp_a, display_name="A", hr_departments="Marketing")
+		self._make_submission(req.name, emp_b, display_name="B", hr_departments="Accounts")
 		self._make_submission(req.name, emp_c, display_name="C")  # Unassigned
 
 		from onerc_compliance.api.v1.compliance import get_dashboard
@@ -367,6 +381,102 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		departments = result["data"]["departments"]
 		# Real departments sorted, "Unassigned" appended last.
 		self.assertEqual(departments, ["Accounts", "Marketing", "Unassigned"])
+
+	# ------------------------------------------------------------------
+	# staff_scope — the dashboard defaults to staff only
+	# ------------------------------------------------------------------
+
+	def _make_mixed_population(self, title):
+		"""One staff submission and one non-staff submission on a scoped requirement."""
+		dept = self._make_empty_department()
+		req = self._make_scoped_requirement(title, dept)
+		staff_emp = self._make_employee(suffix="scope-staff", staff_type="Staff")
+		other_emp = self._make_employee(suffix="scope-other", staff_type="Other")
+		self._make_submission(
+			req.name, staff_emp, status="Reviewed", display_name="Staff Person",
+			hr_departments="ICT", staff_type="Staff",
+		)
+		self._make_submission(
+			req.name, other_emp, status="Pending", display_name="Volunteer Person",
+			hr_departments="SCLAM", staff_type="Other",
+		)
+		return req
+
+	def test_get_submissions_defaults_to_staff_only(self):
+		req = self._make_mixed_population("_test-sub-req-scope-list")
+
+		from onerc_compliance.api.v1.compliance import get_submissions
+
+		default = get_submissions(requirement=req.name)
+		self.assertEqual(default["meta"]["total_count"], 1)
+		self.assertEqual(default["data"][0]["employee_name"], "Staff Person")
+		self.assertEqual(default["meta"]["staff_scope"], "Staff")
+
+	def test_get_submissions_staff_scope_all_includes_everyone(self):
+		req = self._make_mixed_population("_test-sub-req-scope-all")
+
+		from onerc_compliance.api.v1.compliance import get_submissions
+
+		everyone = get_submissions(requirement=req.name, staff_scope="All")
+		self.assertEqual(everyone["meta"]["total_count"], 2)
+		self.assertEqual(everyone["meta"]["staff_scope"], "All")
+		self.assertEqual(
+			sorted(s["employee_name"] for s in everyone["data"]),
+			["Staff Person", "Volunteer Person"],
+		)
+
+	def test_get_submissions_unknown_staff_scope_falls_back_to_staff(self):
+		req = self._make_mixed_population("_test-sub-req-scope-bad")
+
+		from onerc_compliance.api.v1.compliance import get_submissions
+
+		result = get_submissions(requirement=req.name, staff_scope="Nonsense")
+		self.assertEqual(result["meta"]["staff_scope"], "Staff")
+		self.assertEqual(result["meta"]["total_count"], 1)
+
+	def test_get_dashboard_respects_staff_scope(self):
+		req = self._make_mixed_population("_test-sub-req-scope-dash")
+
+		from onerc_compliance.api.v1.compliance import get_dashboard
+
+		# Default: staff only — headline totals AND the department breakdown.
+		staff_only = get_dashboard(requirement=req.name)["data"]
+		self.assertEqual(staff_only["staff_scope"], "Staff")
+		self.assertEqual(staff_only["known_total"], 1)
+		self.assertEqual(staff_only["reviewed_count"], 1)
+		self.assertEqual(staff_only["departments"], ["ICT"])
+		self.assertEqual(staff_only["completion_percent"], 100.0)
+
+		# All: the non-staff submission and its department reappear.
+		everyone = get_dashboard(requirement=req.name, staff_scope="All")["data"]
+		self.assertEqual(everyone["staff_scope"], "All")
+		self.assertEqual(everyone["known_total"], 2)
+		self.assertEqual(everyone["reviewed_count"], 1)
+		self.assertEqual(sorted(everyone["departments"]), ["ICT", "SCLAM"])
+		self.assertEqual(everyone["completion_percent"], 50.0)
+
+	def test_get_submissions_department_filter_uses_hr_departments(self):
+		"""The department dimension is the raw HRDepartments code, not the
+		ERPNext Department link."""
+		req = self._make_mixed_population("_test-sub-req-scope-dept")
+
+		from onerc_compliance.api.v1.compliance import get_submissions
+
+		ict = get_submissions(requirement=req.name, department="ICT")
+		self.assertEqual(ict["meta"]["total_count"], 1)
+		self.assertEqual(ict["data"][0]["department"], "ICT")
+
+		# SCLAM belongs to the non-staff employee, so it is empty under the
+		# default staff-only scope but visible under "All".
+		self.assertEqual(
+			get_submissions(requirement=req.name, department="SCLAM")["meta"]["total_count"], 0
+		)
+		self.assertEqual(
+			get_submissions(
+				requirement=req.name, department="SCLAM", staff_scope="All"
+			)["meta"]["total_count"],
+			1,
+		)
 
 	def test_no_review_blank_mandatory_raises(self):
 		# requires_review=0: submit_requirement sets status straight to Reviewed.
