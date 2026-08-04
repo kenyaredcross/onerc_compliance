@@ -165,8 +165,10 @@ const IconClipboardCheck = {
 
 const allNav = [
   { to: '/compliance',               label: 'My Compliance',     icon: IconList,           officer: false, hrManager: false },
-  { to: '/compliance/scheme',        label: 'Pension Compliance', icon: IconShield,         officer: false, hrManager: false },
-  { to: '/compliance/pension-review', label: 'Pension Review',    icon: IconClipboardCheck, officer: false, hrManager: true  },
+  // Pension Compliance is hidden until launch — the pages stay reachable
+  // directly at /compliance/scheme and /compliance/pension-review for testing.
+  // { to: '/compliance/scheme',        label: 'Pension Compliance', icon: IconShield,         officer: false, hrManager: false },
+  // { to: '/compliance/pension-review', label: 'Pension Review',    icon: IconClipboardCheck, officer: false, hrManager: true  },
   { to: '/compliance/dashboard',     label: 'Dashboard',         icon: IconBarChart,       officer: true,  hrManager: false },
 ]
 
