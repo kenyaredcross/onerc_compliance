@@ -10,6 +10,13 @@ IGNORE_TEST_RECORD_DEPENDENCIES = ["Employee", "Fiscal Year", "Company", "Depart
 _STAFF_USER_EMAIL = "_test-compliance-employee@example.com"
 
 
+def _default_company():
+	"""Resolve a real company on the current site. The original tests hardcoded
+	the Frappe demo "United Nations" company, which does not exist on every site;
+	fall back to the first available company so these tests run anywhere."""
+	return frappe.db.get_value("Company", {}, "name")
+
+
 class IntegrationTestComplianceSubmission(IntegrationTestCase):
 	def setUp(self):
 		# Delete ALL submissions for test requirements — catches auto-generated ones for any
@@ -106,7 +113,7 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 			"gender": "Male",
 			"date_of_birth": "1990-01-01",
 			"date_of_joining": "2020-01-01",
-			"company": "United Nations",
+			"company": _default_company(),
 		})
 		emp.insert(ignore_permissions=True)
 		return emp.name
@@ -129,6 +136,35 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		doc.insert(ignore_permissions=True)
 		return doc
 
+	def _reject_submission(self, req, emp, field):
+		"""Drive a submission into Rejected the way the app does: fill a valid
+		value and move Pending -> Submitted (passing mandatory validation), then
+		reviewer appends a Rejected action. Avoids inserting a new doc straight in
+		Submitted, which would fail _validate_submitted_values with empty values."""
+		sub = self._make_submission(req.name, emp)  # Pending
+		sub.reload()
+		sub.append("values", {
+			"field_name": field,
+			"field_label": req.fields[0].label,
+			"field_type": req.fields[0].fieldtype,
+			"value": "original-value",
+		})
+		sub.status = "Submitted"
+		sub.save(ignore_permissions=True)
+
+		sub.reload()
+		sub.append("review_actions", {
+			"action": "Rejected",
+			"reviewer": "Administrator",
+			"remarks": "Wrong certificate uploaded.",
+		})
+		sub.status = "Rejected"
+		sub.save(ignore_permissions=True)
+		self.assertEqual(
+			frappe.db.get_value("Compliance Submission", sub.name, "status"), "Rejected"
+		)
+		return sub
+
 	def _make_empty_department(self):
 		"""A department with no employees, used to scope a requirement so that
 		_generate_submissions() creates ZERO auto-submissions. Every submission on
@@ -140,7 +176,7 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		dept = frappe.get_doc({
 			"doctype": "Department",
 			"department_name": name,
-			"company": "United Nations",
+			"company": _default_company(),
 		})
 		dept.insert(ignore_permissions=True)
 		return dept.name
@@ -395,6 +431,69 @@ class IntegrationTestComplianceSubmission(IntegrationTestCase):
 		self.assertEqual(
 			frappe.db.get_value("Compliance Submission", sub.name, "status"),
 			"Pending",
+		)
+
+	def test_rejected_submission_can_be_resubmitted(self):
+		# A rejected certificate must be re-uploadable: the reviewer tells staff to
+		# correct and resubmit, and the doctype allows Rejected -> Submitted. Drive
+		# the real submit_requirement path and assert it lands back in Submitted.
+		req = self._make_requirement(
+			title="_test-sub-req-reject-resubmit",
+			fields=[{
+				"label": "Certificate",
+				"fieldtype": "Data",
+				"mandatory": 1,
+			}],
+		)
+		emp = self._make_employee(suffix="reject-resubmit")
+		# submit_requirement resolves the employee from the session user, so the
+		# Employee must be linked to a user we can log in as.
+		user = self._make_staff_user()
+		frappe.db.set_value("Employee", emp, "user_id", user)
+		field = req.fields[0].fieldname
+		sub = self._reject_submission(req, emp, field)
+
+		# Staff re-uploads via the public API.
+		from onerc_compliance.api.v1.compliance import submit_requirement
+		try:
+			frappe.set_user(user)
+			result = submit_requirement(req.name, {field: "corrected-value"})
+		finally:
+			frappe.set_user("Administrator")
+		self.assertEqual(result["status"], "success")
+		self.assertEqual(result["data"]["status"], "Submitted")
+		self.assertEqual(
+			frappe.db.get_value("Compliance Submission", sub.name, "status"), "Submitted"
+		)
+
+	def test_rejected_resubmit_blank_mandatory_raises(self):
+		# Re-uploads from Rejected must still be validated: a blank mandatory field
+		# cannot slip through just because the prior status was Rejected.
+		req = self._make_requirement(
+			title="_test-sub-req-reject-blank",
+			fields=[{
+				"label": "Certificate",
+				"fieldtype": "Data",
+				"mandatory": 1,
+			}],
+		)
+		emp = self._make_employee(suffix="reject-blank")
+		user = self._make_staff_user()
+		frappe.db.set_value("Employee", emp, "user_id", user)
+		field = req.fields[0].fieldname
+		sub = self._reject_submission(req, emp, field)
+
+		from onerc_compliance.api.v1.compliance import submit_requirement
+		try:
+			frappe.set_user(user)
+			with self.assertRaises(frappe.ValidationError):
+				submit_requirement(req.name, {field: ""})
+		finally:
+			frappe.set_user("Administrator")
+
+		# Must not have moved out of Rejected.
+		self.assertEqual(
+			frappe.db.get_value("Compliance Submission", sub.name, "status"), "Rejected"
 		)
 
 	# ---- Permission tests ----

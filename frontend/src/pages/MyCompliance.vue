@@ -87,6 +87,16 @@
               <p class="text-orange-700">{{ latestRemark(req) || 'No remark provided.' }}</p>
             </div>
 
+            <!-- Rejection reason (Rejected — staff may correct and re-upload) -->
+            <div
+              v-if="req.submission_status === 'Rejected'"
+              class="rounded-lg bg-red-50 border border-red-200 p-3 text-sm"
+            >
+              <p class="font-semibold text-red-800 mb-1">Reason for Rejection</p>
+              <p class="text-red-700">{{ latestRemark(req) || 'No reason provided.' }}</p>
+              <p class="text-red-600 mt-2">Please correct the issue and upload the valid certificate, then resubmit.</p>
+            </div>
+
             <!-- Read-only state for non-editable statuses -->
             <template v-if="!isEditable(req)">
               <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Your Answers</p>
@@ -283,7 +293,11 @@ function toggle(req) {
 }
 
 function isEditable(req) {
-  return req.submission_status === 'Pending' || req.submission_status === 'Needs More Info'
+  return (
+    req.submission_status === 'Pending' ||
+    req.submission_status === 'Needs More Info' ||
+    req.submission_status === 'Rejected'
+  )
 }
 
 function latestRemark(req) {

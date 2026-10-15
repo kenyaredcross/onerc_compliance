@@ -84,11 +84,12 @@ class ComplianceSubmission(Document):
 
 	def _validate_submitted_values(self):
 		# Run on the submit action: employee moves status into Submitted or Reviewed
-		# from a prior Pending or Needs More Info state.  Reviewer-driven
-		# Submitted → Reviewed is intentionally excluded (_prev_status == "Submitted").
+		# from a prior Pending, Needs More Info or Rejected state (the latter is a
+		# re-upload after rejection).  Reviewer-driven Submitted → Reviewed is
+		# intentionally excluded (_prev_status == "Submitted").
 		is_submit_action = (
 			self.status in ("Submitted", "Reviewed")
-			and self._prev_status in ("Pending", "Needs More Info")
+			and self._prev_status in ("Pending", "Needs More Info", "Rejected")
 		)
 		if not is_submit_action:
 			return

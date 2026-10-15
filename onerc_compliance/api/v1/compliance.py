@@ -116,7 +116,7 @@ def submit_requirement(requirement, answers):
 	submission_name = ensure_submission(requirement, employee_name)
 	sub = frappe.get_doc("Compliance Submission", submission_name)
 
-	if sub.status not in ("Pending", "Needs More Info"):
+	if sub.status not in ("Pending", "Needs More Info", "Rejected"):
 		return _err(
 			_("Submission is in status '{0}' and cannot be re-submitted.").format(sub.status)
 		)
