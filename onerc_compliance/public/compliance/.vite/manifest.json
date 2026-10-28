@@ -1,6 +1,6 @@
 {
-  "_compliance-StatusBadge-B9yDwvx7.js": {
-    "file": "compliance-StatusBadge-B9yDwvx7.js",
+  "_compliance-StatusBadge-BVqREK7I.js": {
+    "file": "compliance-StatusBadge-BVqREK7I.js",
     "name": "StatusBadge",
     "imports": [
       "index.html"
@@ -19,7 +19,7 @@
     "name": "useIctUser"
   },
   "index.html": {
-    "file": "compliance-f4f-UMYZ.js",
+    "file": "compliance-BHrGDS60.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
@@ -35,52 +35,52 @@
     ]
   },
   "src/pages/ComplianceDashboard.vue": {
-    "file": "compliance-ComplianceDashboard-C71RdcTl.js",
+    "file": "compliance-ComplianceDashboard-D5ffJGQN.js",
     "name": "ComplianceDashboard",
     "src": "src/pages/ComplianceDashboard.vue",
     "isDynamicEntry": true,
     "imports": [
       "index.html",
       "_compliance-useApi-BBn4Vqwc.js",
-      "_compliance-StatusBadge-B9yDwvx7.js"
+      "_compliance-StatusBadge-BVqREK7I.js"
     ]
   },
   "src/pages/MyCompliance.vue": {
-    "file": "compliance-MyCompliance-D9iqpT-A.js",
+    "file": "compliance-MyCompliance-BBLRZZ0Q.js",
     "name": "MyCompliance",
     "src": "src/pages/MyCompliance.vue",
     "isDynamicEntry": true,
     "imports": [
       "index.html",
       "_compliance-useApi-BBn4Vqwc.js",
-      "_compliance-StatusBadge-B9yDwvx7.js"
+      "_compliance-StatusBadge-BVqREK7I.js"
     ]
   },
   "src/pages/PensionReview.vue": {
-    "file": "compliance-PensionReview-CWR2zVOc.js",
+    "file": "compliance-PensionReview-Bpx-zlBS.js",
     "name": "PensionReview",
     "src": "src/pages/PensionReview.vue",
     "isDynamicEntry": true,
     "imports": [
       "index.html",
       "_compliance-useApi-BBn4Vqwc.js",
-      "_compliance-StatusBadge-B9yDwvx7.js"
+      "_compliance-StatusBadge-BVqREK7I.js"
     ]
   },
   "src/pages/SchemeForms.vue": {
-    "file": "compliance-SchemeForms-BYYms-Kc.js",
+    "file": "compliance-SchemeForms-BFqi_DO9.js",
     "name": "SchemeForms",
     "src": "src/pages/SchemeForms.vue",
     "isDynamicEntry": true,
     "imports": [
       "index.html",
       "_compliance-useApi-BBn4Vqwc.js",
-      "_compliance-StatusBadge-B9yDwvx7.js",
+      "_compliance-StatusBadge-BVqREK7I.js",
       "_compliance-_plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "src/pages/ict/HelpHome.vue": {
-    "file": "compliance-HelpHome-Df1NUBkv.js",
+    "file": "compliance-HelpHome-pQ2I55-r.js",
     "name": "HelpHome",
     "src": "src/pages/ict/HelpHome.vue",
     "isDynamicEntry": true,
@@ -91,7 +91,7 @@
     ]
   },
   "src/pages/ict/IctPortal.vue": {
-    "file": "compliance-IctPortal-xoSSyV0u.js",
+    "file": "compliance-IctPortal-kEeb4x-M.js",
     "name": "IctPortal",
     "src": "src/pages/ict/IctPortal.vue",
     "isDynamicEntry": true,
@@ -101,7 +101,7 @@
     ]
   },
   "src/pages/ict/ResourceAccess.vue": {
-    "file": "compliance-ResourceAccess-Cb2lZPYZ.js",
+    "file": "compliance-ResourceAccess-BRNhju96.js",
     "name": "ResourceAccess",
     "src": "src/pages/ict/ResourceAccess.vue",
     "isDynamicEntry": true,
@@ -112,7 +112,7 @@
     ]
   },
   "src/pages/ict/SupportCenter.vue": {
-    "file": "compliance-SupportCenter-D95ZegDp.js",
+    "file": "compliance-SupportCenter-BSk6YA4i.js",
     "name": "SupportCenter",
     "src": "src/pages/ict/SupportCenter.vue",
     "isDynamicEntry": true,

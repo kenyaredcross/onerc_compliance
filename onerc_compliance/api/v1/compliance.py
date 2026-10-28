@@ -191,7 +191,7 @@ def review_submission(submission, action, remarks=None):
 
 
 @frappe.whitelist()
-def get_submissions(requirement, status=None, search=None, department=None, page=1, page_length=50):
+def get_submissions(requirement, status=None, search=None, department=None, is_emp=None, page=1, page_length=50):
 	# Requires write on Compliance Submission — employees are read-only and must be denied.
 	frappe.has_permission("Compliance Submission", ptype="write", throw=True)
 
@@ -210,6 +210,24 @@ def get_submissions(requirement, status=None, search=None, department=None, page
 			filters.append(["department", "is", "not set"])
 		else:
 			filters.append(["department", "=", department])
+
+	# Optional "Is EMP" filter — restrict to submissions whose linked Employee
+	# has an employee number beginning with 'EMP' (the Staff Portal employee
+	# rule). None/"" → no filtering; truthy → EMP only; falsy → non-EMP only.
+	# Resolved to a set of Employee names so it composes with the AND filters
+	# above and keeps pagination/counts correct.
+	if is_emp is not None and str(is_emp).strip().lower() not in ("", "none"):
+		want_emp = str(is_emp).strip().lower() in ("1", "true", "yes")
+		emp_names = frappe.get_all(
+			"Employee",
+			filters={"employee_number": ["like", "EMP%"]},
+			pluck="name",
+		)
+		if want_emp:
+			# No EMP employees → nothing can match; short-circuit to empty.
+			filters.append(["employee", "in", emp_names or [""]])
+		elif emp_names:
+			filters.append(["employee", "not in", emp_names])
 
 	# OR group — a search term matches either the display name or the employee ID.
 	# Frappe builds the WHERE clause as `(filters ANDed) AND (or_filters ORed)`, so
@@ -296,15 +314,33 @@ def get_submissions(requirement, status=None, search=None, department=None, page
 
 
 @frappe.whitelist()
-def get_dashboard(requirement):
+def get_dashboard(requirement, is_emp=None):
 	# Requires write on Compliance Submission — same gate as get_submissions and review_submission.
 	frappe.has_permission("Compliance Submission", ptype="write", throw=True)
 
 	req_doc = frappe.get_doc("Compliance Requirement", requirement)
 
+	filters = [["requirement", "=", requirement]]
+
+	# Optional "Is EMP" filter — restrict to submissions whose linked Employee
+	# has an employee number beginning with 'EMP'. Mirrors get_submissions.
+	# None/"" → no filtering; truthy → EMP only; falsy → non-EMP only.
+	emp_filter_active = is_emp is not None and str(is_emp).strip().lower() not in ("", "none")
+	if emp_filter_active:
+		want_emp = str(is_emp).strip().lower() in ("1", "true", "yes")
+		emp_names = frappe.get_all(
+			"Employee",
+			filters={"employee_number": ["like", "EMP%"]},
+			pluck="name",
+		)
+		if want_emp:
+			filters.append(["employee", "in", emp_names or [""]])
+		elif emp_names:
+			filters.append(["employee", "not in", emp_names])
+
 	submissions = frappe.get_all(
 		"Compliance Submission",
-		filters={"requirement": requirement},
+		filters=filters,
 		fields=["name", "status", "department"],
 	)
 
@@ -330,7 +366,10 @@ def get_dashboard(requirement):
 	reviewed_count = status_counts.get("Reviewed", 0)
 	known_total = len(submissions)
 	expected = req_doc.expected_headcount or 0
-	denominator = expected if expected else known_total
+	# expected_headcount is a static, whole-requirement figure and can't be
+	# EMP-scoped — basing completion on it while the EMP filter is active would
+	# understate the percentage. When filtering, use the filtered known_total.
+	denominator = known_total if emp_filter_active else (expected if expected else known_total)
 	completion_percent = round((reviewed_count / denominator) * 100, 2) if denominator else 0.0
 
 	return _ok({

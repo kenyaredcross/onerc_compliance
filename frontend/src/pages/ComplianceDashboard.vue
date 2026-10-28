@@ -158,6 +158,16 @@
               <option v-for="s in statusOrder" :key="s" :value="s">{{ s }}</option>
               <option value="Exempted">Exempted</option>
             </select>
+            <!-- Is EMP (Staff Portal employees only) -->
+            <label class="inline-flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700">
+              <input
+                type="checkbox"
+                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                v-model="empOnly"
+                @change="onEmpFilterChange"
+              />
+              <span class="font-medium">Staff only (EMP)</span>
+            </label>
           </div>
         </div>
 
@@ -341,6 +351,8 @@ const selectedRequirement = ref('')
 const statusFilter = ref('')
 const searchTerm = ref('')
 const departmentFilter = ref('')
+// Default to showing only Staff Portal employees (employee number starts with EMP)
+const empOnly = ref(true)
 
 const page = ref(1)
 const pageLength = 50
@@ -354,7 +366,8 @@ const submissions = ref([])
 const departmentOptions = computed(() => dashboard.value?.departments || [])
 const totalPages = computed(() => Math.max(1, Math.ceil(totalCount.value / pageLength)))
 const hasActiveFilters = computed(
-  () => !!(searchTerm.value.trim() || departmentFilter.value || statusFilter.value)
+  // empOnly defaults to true, so it only counts as an active (deviating) filter when turned off.
+  () => !!(searchTerm.value.trim() || departmentFilter.value || statusFilter.value || empOnly.value === false)
 )
 
 const expandedSub = ref(null)
@@ -395,6 +408,7 @@ function resetFilterState() {
   searchTerm.value = ''
   departmentFilter.value = ''
   statusFilter.value = ''
+  empOnly.value = true
   page.value = 1
   if (searchTimer) {
     clearTimeout(searchTimer)
@@ -418,6 +432,12 @@ function onFilterChange() {
   loadSubmissions()
 }
 
+// The EMP toggle also scopes the dashboard aggregates, so refresh both.
+function onEmpFilterChange() {
+  page.value = 1
+  refresh()
+}
+
 function clearFilters() {
   resetFilterState()
   loadSubmissions()
@@ -436,9 +456,10 @@ async function refresh() {
 async function loadDashboard() {
   dashLoading.value = true
   try {
-    const result = await call('onerc_compliance.api.v1.compliance.get_dashboard', {
-      requirement: selectedRequirement.value,
-    })
+    const args = { requirement: selectedRequirement.value }
+    // Scope the aggregates (completion, status counts, by-department) to EMP when on.
+    if (empOnly.value) args.is_emp = 1
+    const result = await call('onerc_compliance.api.v1.compliance.get_dashboard', args)
     dashboard.value = result?.data || null
   } catch (e) {
     toast.error(e.message || 'Failed to load dashboard.')
@@ -458,6 +479,8 @@ async function loadSubmissions() {
     if (statusFilter.value) args.status = statusFilter.value
     if (departmentFilter.value) args.department = departmentFilter.value
     if (searchTerm.value.trim()) args.search = searchTerm.value.trim()
+    // Only send is_emp when filtering to EMP; omitting it means "all" on the backend.
+    if (empOnly.value) args.is_emp = 1
     const result = await call('onerc_compliance.api.v1.compliance.get_submissions', args)
     submissions.value = result?.data || []
     totalCount.value = result?.meta?.total_count ?? submissions.value.length
