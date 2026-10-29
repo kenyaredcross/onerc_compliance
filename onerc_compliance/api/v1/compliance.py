@@ -23,6 +23,36 @@ def _err(message, data=None):
 	return {"status": "error", "data": data if data is not None else [], "message": message, "meta": {}}
 
 
+def _live_department_map(submissions):
+	"""Given submission rows that include `employee`, return {submission_name:
+	department} where the department is resolved live from the Employee record
+	for any submission whose own stored `department` is blank.
+
+	The submission only snapshots department at creation time, so a blank value
+	usually means the Employee had no department then but may have one now.
+	Resolving live keeps the dashboard correct without trusting the snapshot.
+	Batched so we do a single Employee query regardless of row count."""
+	need_lookup = {
+		row["employee"]
+		for row in submissions
+		if not (row.get("department") or "").strip() and row.get("employee")
+	}
+	emp_dept = {}
+	if need_lookup:
+		for emp in frappe.get_all(
+			"Employee",
+			filters={"name": ["in", list(need_lookup)]},
+			fields=["name", "department"],
+		):
+			emp_dept[emp["name"]] = (emp.get("department") or "").strip()
+
+	resolved = {}
+	for row in submissions:
+		stored = (row.get("department") or "").strip()
+		resolved[row["name"]] = stored or emp_dept.get(row.get("employee"), "")
+	return resolved
+
+
 @frappe.whitelist()
 def get_my_requirements():
 	employee_name = get_employee_for_user()
@@ -256,11 +286,14 @@ def get_submissions(requirement, status=None, search=None, department=None, is_e
 		"Compliance Submission",
 		filters=filters,
 		or_filters=or_filters,
-		fields=["name", "employee_name", "department", "status", "submitted_on"],
+		fields=["name", "employee", "employee_name", "department", "status", "submitted_on"],
 		order_by="employee_name asc, name asc",
 		limit=page_length,
 		offset=(page - 1) * page_length,
 	)
+
+	# Resolve a live department for rows whose stored snapshot is blank.
+	dept_by_sub = _live_department_map(rows)
 
 	req_doc = frappe.get_doc("Compliance Requirement", requirement)
 	field_schema = []
@@ -296,7 +329,7 @@ def get_submissions(requirement, status=None, search=None, department=None, is_e
 		result.append({
 			"name": row.name,
 			"employee_name": sub_doc.employee_name or "",
-			"department": sub_doc.department or "",
+			"department": dept_by_sub.get(row.name) or "",
 			"status": row.status,
 			"submitted_on": str(sub_doc.submitted_on) if sub_doc.submitted_on else None,
 			"field_schema": field_schema,
@@ -341,8 +374,11 @@ def get_dashboard(requirement, is_emp=None):
 	submissions = frappe.get_all(
 		"Compliance Submission",
 		filters=filters,
-		fields=["name", "status", "department"],
+		fields=["name", "status", "department", "employee"],
 	)
+
+	# Resolve a live department for any submission with a blank snapshot.
+	dept_by_sub = _live_department_map(submissions)
 
 	status_counts = {}
 	dept_map = {}
@@ -350,7 +386,7 @@ def get_dashboard(requirement, is_emp=None):
 	for sub in submissions:
 		status_counts[sub.status] = status_counts.get(sub.status, 0) + 1
 
-		dept = sub.department or "Unassigned"
+		dept = dept_by_sub.get(sub.name) or "Unassigned"
 		if dept not in dept_map:
 			dept_map[dept] = {"department": dept, "reviewed": 0, "total": 0}
 		dept_map[dept]["total"] += 1

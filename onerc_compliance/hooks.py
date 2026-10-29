@@ -39,6 +39,11 @@ doc_events = {
 		"after_insert": "onerc_compliance.onerc_incident_management.helpdesk_sync.create_helpdesk_ticket",
 		"on_update": "onerc_compliance.onerc_incident_management.helpdesk_sync.sync_helpdesk_on_resolve",
 	},
+	"Employee": {
+		# Keep the department snapshot on Compliance Submissions in sync when an
+		# Employee's department (or designation) changes in the HR master.
+		"on_update": "onerc_compliance.utils.sync_submission_employee_fields",
+	},
 }
 
 after_install = "onerc_compliance.onerc_incident_management.install.setup_itsm"

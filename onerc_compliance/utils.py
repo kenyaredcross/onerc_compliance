@@ -121,3 +121,88 @@ def link_file_to_submission(file_url, submission_name, fieldname=None):
 	file_doc.is_private = 1
 	file_doc.save(ignore_permissions=True)
 	return True
+
+
+def sync_submission_employee_fields(doc, method=None):
+	"""Employee on_update hook: keep the department/designation snapshot on that
+	employee's Compliance Submissions in sync with the HR master.
+
+	Compliance Submission snapshots these fields at creation time and never
+	refreshes them, so changing an Employee's department later would otherwise
+	leave their submissions (and the dashboard grouping) showing the old /
+	blank value. We only write when the value has actually changed, and we use
+	frappe.db.set_value to avoid re-triggering submission validations.
+	"""
+	submissions = frappe.get_all(
+		"Compliance Submission",
+		filters={"employee": doc.name},
+		fields=["name", "department", "designation"],
+	)
+	if not submissions:
+		return
+
+	new_department = doc.department or ""
+	new_designation = doc.designation or ""
+
+	for sub in submissions:
+		updates = {}
+		if (sub.department or "") != new_department:
+			updates["department"] = new_department
+		if (sub.designation or "") != new_designation:
+			updates["designation"] = new_designation
+		if updates:
+			frappe.db.set_value(
+				"Compliance Submission", sub.name, updates, update_modified=False
+			)
+
+
+def backfill_submission_departments():
+	"""Re-copy department/designation onto every Compliance Submission from its
+	current Employee record. One-off repair for submissions whose snapshot was
+	captured while the Employee had no department (shown as "Unassigned" on the
+	dashboard). Safe to run repeatedly — only changed rows are written.
+
+	Returns a summary dict: {total, updated, skipped_no_employee}.
+	"""
+	submissions = frappe.get_all(
+		"Compliance Submission",
+		fields=["name", "employee", "department", "designation"],
+	)
+
+	# Batch-load every linked Employee's current department/designation.
+	emp_ids = {s["employee"] for s in submissions if s.get("employee")}
+	emp_data = {}
+	if emp_ids:
+		for emp in frappe.get_all(
+			"Employee",
+			filters={"name": ["in", list(emp_ids)]},
+			fields=["name", "department", "designation"],
+		):
+			emp_data[emp["name"]] = emp
+
+	updated = 0
+	skipped_no_employee = 0
+	for sub in submissions:
+		emp = emp_data.get(sub.get("employee"))
+		if not emp:
+			skipped_no_employee += 1
+			continue
+		updates = {}
+		new_department = emp.get("department") or ""
+		new_designation = emp.get("designation") or ""
+		if (sub.get("department") or "") != new_department:
+			updates["department"] = new_department
+		if (sub.get("designation") or "") != new_designation:
+			updates["designation"] = new_designation
+		if updates:
+			frappe.db.set_value(
+				"Compliance Submission", sub["name"], updates, update_modified=False
+			)
+			updated += 1
+
+	frappe.db.commit()
+	return {
+		"total": len(submissions),
+		"updated": updated,
+		"skipped_no_employee": skipped_no_employee,
+	}
